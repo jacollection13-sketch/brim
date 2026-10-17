@@ -1,0 +1,3656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brim">
+<title>Brim</title>
+<meta name="theme-color" content="#0E1B27">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+
+    --bg: #E9F0F3;
+    --surface: #F8FBFC;
+    --ink: #14283A;
+    --muted: #566B7A;
+    --line: #C9D7DE;
+    --btn-bg: #14283A;
+    --btn-ink: #F4F9FB;
+    --focus: #1B6FA8;
+    --danger: #B3261E;
+
+    --orb: #EAF3F7;
+    --orb-rim: rgba(20, 40, 58, .30);
+    --glow: rgba(20, 40, 58, .14);
+
+    --base-l: #7CCBE6;   --base-d: #4BA6CB;
+    --bronze-l: #D69A62; --bronze-d: #B87638;
+    --silver-l: #BFC9D2; --silver-d: #8F9DAB;
+    --gold-l: #F7CB5C;   --gold-d: #E3A720;
+    --cf-base: rgba(75, 166, 203, .40);
+    --cf-bronze: rgba(184, 118, 56, .42);
+    --cf-silver: rgba(143, 157, 171, .45);
+    --cf-gold: rgba(227, 167, 32, .50);
+    --viol-l: #B7ABF2;   --viol-d: #8473D9;
+    --cf-viol: rgba(132, 115, 217, .40);
+    --dia-l: #A8EDFF;    --dia-d: #36B1EC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0E1B27;
+      --surface: #162735;
+      --ink: #EAF2F6;
+      --muted: #9DB2C1;
+      --line: #28394A;
+      --btn-bg: #EAF2F6;
+      --btn-ink: #0E1B27;
+      --focus: #7CC4EE;
+      --danger: #FF9A92;
+      --orb-rim: rgba(234, 242, 246, .55);
+      --glow: rgba(124, 203, 230, .22);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0E1B27;
+    --surface: #162735;
+    --ink: #EAF2F6;
+    --muted: #9DB2C1;
+    --line: #28394A;
+    --btn-bg: #EAF2F6;
+    --btn-ink: #0E1B27;
+    --focus: #7CC4EE;
+    --danger: #FF9A92;
+    --orb-rim: rgba(234, 242, 246, .55);
+    --glow: rgba(124, 203, 230, .22);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--bg); -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    overflow-x: hidden;
+  }
+  [hidden] { display: none !important; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  h2, h3 { font-family: "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -0.02em; margin: 0; }
+  h2 { font-weight: 700; font-size: 21px; }
+  h3 { font-weight: 700; font-size: 18px; }
+  .sub { margin: 2px 0 14px; color: var(--muted); font-size: 14px; }
+
+  .app { max-width: 440px; margin: 0 auto; padding: 10px 20px 120px; }
+
+  /* header: brand | date | gear */
+  .top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .brand { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.03em; justify-self: start; }
+  .gear { justify-self: end; }
+  .daynav { display: flex; align-items: center; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent;
+    display: grid; place-items: center; flex: none;
+  }
+  .icon-btn:disabled { opacity: .3; cursor: default; }
+  .icon-btn svg { width: 22px; height: 22px; }
+  .daylabel { min-width: 100px; text-align: center; display: flex; flex-direction: column; line-height: 1.2; }
+  #dayMain { font-weight: 600; font-size: 15px; white-space: nowrap; }
+  #daySub { font-size: 12.5px; color: var(--muted); }
+
+  /* steps view */
+  .stage {
+    --water-light: var(--dia-l); --water-deep: var(--dia-d); --tier-glow: rgba(96, 205, 255, .36);
+  }
+
+  .hero { position: relative; width: min(78vw, 310px); aspect-ratio: 1; margin: 22px auto 28px; }
+  .hero::before {
+    content: ""; position: absolute; inset: -12%; border-radius: 50%;
+    background: radial-gradient(closest-side, var(--tier-glow), transparent);
+  }
+  .hero.done::before { animation: glowPulse 3.2s ease-in-out infinite; }
+  @keyframes glowPulse { 0%, 100% { opacity: .7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.07); } }
+  .hero svg { position: relative; width: 100%; height: 100%; display: block; overflow: visible; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .hero.pop { animation: pop .7s ease; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+  /* water inside the sphere */
+  .w-body { fill: var(--water-light); fill: color-mix(in srgb, var(--water-light) 64%, var(--water-deep)); transition: fill .9s ease; }
+  .w-top { fill: var(--water-light); transition: fill .9s ease; }
+  .w-rim { fill: none; stroke: #fff; stroke-opacity: .65; stroke-width: 1.2; }
+  .ripple { fill: none; stroke: #fff; stroke-opacity: .6; stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: ripple 4.4s ease-out infinite; }
+  .ripple.r2 { animation-delay: 2.2s; }
+  @keyframes ripple { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(1); opacity: 0; } }
+  .bubble { fill: rgba(255, 255, 255, .5); stroke: rgba(255, 255, 255, .85); stroke-width: .6; animation: rise 6s linear infinite; }
+  @keyframes rise {
+    0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: .9; } 35% { transform: translate(4px, -70px); }
+    65% { transform: translate(-3px, -140px); } 92% { opacity: .7; } 100% { transform: translate(2px, -215px); opacity: 0; }
+  }
+
+  /* celebration */
+  .drop { animation: burstOut 1s cubic-bezier(.15, .7, .3, 1) forwards; }
+  @keyframes burstOut {
+    0% { transform: translate(0, 0) scale(.4); opacity: 1; }
+    65% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), calc(var(--dy) + 22px)) scale(.7); opacity: 0; }
+  }
+  .ring { fill: none; stroke: #C9F5FF; stroke-width: 3; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .ring.go { animation: ringOut 1.1s ease-out; }
+  @keyframes ringOut { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+  .sweep { opacity: 0; }
+  .sweep.go { animation: sweepMove 1.2s ease-in-out; }
+  @keyframes sweepMove { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(300px); opacity: 0; } }
+  .glint { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; animation: twinkle 3.4s ease-in-out infinite; }
+  .spark { opacity: 0; fill: #fff; transform-box: fill-box; transform-origin: center; }
+  .hero.done .spark { animation: twinkle 2.6s ease-in-out infinite; }
+  .hero.done .spark.s2 { animation-delay: .9s; }
+  .hero.done .spark.s3 { animation-delay: 1.7s; }
+  @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+  .readout {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none; color: #14283A; text-shadow: 0 0 14px rgba(255, 255, 255, .35);
+  }
+  .count {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800;
+    font-size: clamp(46px, 15vw, 64px); letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .of { margin-top: 6px; font-weight: 600; font-size: 15px; }
+  .status { text-align: center; font-weight: 600; font-size: 17px; margin: 16px 0 0; min-height: 1.5em; }
+
+  .log { margin-top: 26px; }
+  .lbl { display: block; font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .row { display: flex; gap: 10px; }
+  input[type="text"], input[type="password"] {
+    width: 100%; min-width: 0; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface);
+    padding: 0 14px; font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    height: 48px; padding: 0 20px; border-radius: 14px; border: 0; background: var(--btn-bg); color: var(--btn-ink);
+    font-weight: 600; font-size: 16px; white-space: nowrap;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+  .btn.danger { color: var(--danger); }
+  .btn.wide { width: 100%; }
+  .err { color: var(--danger); font-size: 14px; margin: 8px 0 0; }
+
+  /* photo view */
+  .block { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .frame {
+    position: relative; aspect-ratio: 4 / 5; border-radius: 22px; overflow: hidden;
+    background: var(--surface); border: 1.5px dashed var(--line);
+  }
+  .frame.has { border-style: solid; }
+  .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .add {
+    position: absolute; inset: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; background: none; border: 0; font-weight: 600; font-size: 16px; padding: 24px; text-align: center;
+  }
+  .add svg { width: 34px; height: 34px; color: var(--muted); }
+  .add small { font-weight: 400; color: var(--muted); font-size: 13.5px; }
+  .actions { display: flex; gap: 10px; margin-top: 12px; }
+  .actions .btn { flex: 1; }
+  .note { margin: 12px 0 0; font-size: 13.5px; color: var(--muted); }
+
+  .strip { display: flex; gap: 10px; overflow-x: auto; margin: 0 -20px; padding: 6px 20px 12px; list-style: none; scroll-snap-type: x proximity; }
+  .strip li { flex: none; scroll-snap-align: start; }
+  .hday { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 0; background: none; border-radius: 16px; }
+  .thumb { width: 64px; height: 80px; border-radius: 14px; border: 3px solid var(--ring, var(--line)); overflow: hidden; display: block; background: var(--surface); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hday.on .thumb { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--ink); }
+  .hd { font-weight: 600; font-size: 13px; }
+
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cmp figure { margin: 0; }
+  .cmp img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 16px; display: block; background: var(--surface); }
+  .cmp figcaption { margin-top: 6px; font-size: 13.5px; font-weight: 600; }
+
+  /* calendar widget (used in the calendar view and the goal editor) */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .cal-title { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.02em; }
+  .cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day {
+    position: relative; aspect-ratio: 1; border-radius: 12px; border: 0; background: transparent;
+    display: grid; place-items: center; font-weight: 600; font-size: 14.5px; font-variant-numeric: tabular-nums; padding: 0;
+  }
+  .cal-day:disabled { opacity: .3; cursor: default; }
+  .cal-day.has-steps {
+    box-shadow: inset 0 0 0 2.5px var(--ring);
+    background: linear-gradient(to top, var(--cf) var(--fill), transparent var(--fill));
+  }
+  .cal-day.sel { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .cal-day.sel:focus-visible { outline: 3px solid var(--focus); }
+  .cal-day.has-photo::before {
+    content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); opacity: .7;
+  }
+  .cal.main .cal-day.is-today .num { font-weight: 800; }
+  .cal.main .cal-day.is-today::after {
+    content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--ink);
+  }
+  .cal.pick .cal-day.in-range { background: color-mix(in srgb, var(--focus) 24%, transparent); }
+  .cal.pick .cal-day.range-start, .cal.pick .cal-day.range-end { background: var(--btn-bg); color: var(--btn-ink); }
+  .cal.pick .cal-day.has-ovr::after {
+    content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--gold-d);
+  }
+
+  .daycard {
+    margin-top: 22px; padding: 16px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line);
+    display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start;
+  }
+  .dc-date { font-weight: 600; font-size: 14px; color: var(--muted); }
+  .dc-steps { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; margin-top: 2px; }
+  .dc-goal { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .dc-thumb {
+    width: 72px; height: 90px; border-radius: 14px; overflow: hidden; border: 1.5px dashed var(--line);
+    display: grid; place-items: center; color: var(--muted);
+  }
+  .dc-thumb.has { border-style: solid; }
+  .dc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .dc-thumb svg { width: 24px; height: 24px; }
+  .dc-actions { grid-column: 1 / -1; display: flex; gap: 10px; }
+  .dc-actions .btn { flex: 1; height: 44px; font-size: 15px; }
+
+  /* bottom tab bar */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .tabbar-in { display: flex; max-width: 440px; margin: 0 auto; }
+  .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 2px;
+    border: 0; background: none; color: var(--muted); font-size: 11.5px; font-weight: 600; border-radius: 14px;
+  }
+  .tab .ti { width: 44px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background-color .2s ease; }
+  .tab svg { width: 24px; height: 24px; }
+  .tab[aria-current="page"] { color: var(--ink); }
+  .tab[aria-current="page"] .ti { background: var(--line); }
+
+  /* settings drawer */
+  .scrim {
+    position: fixed; inset: 0; z-index: 30; background: rgba(8, 16, 24, .5);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease;
+  }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 40; width: min(92vw, 400px);
+    background: var(--bg); border-left: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    transform: translateX(100%); visibility: hidden;
+    transition: transform .28s cubic-bezier(.3, .8, .3, 1), visibility 0s linear .28s;
+  }
+  .drawer.open { transform: none; visibility: visible; transition: transform .28s cubic-bezier(.3, .8, .3, 1), visibility 0s; }
+  .drawer-head { display: flex; align-items: center; gap: 4px; padding: 8px 10px 4px 12px; }
+  .drawer-head h2 { flex: 1; font-size: 20px; padding-left: 4px; }
+  .drawer-head h2:focus { outline: none; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 8px 20px 32px; }
+
+  .menu { list-style: none; margin: 0; padding: 0; }
+  .menu-item {
+    width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 4px; text-align: left;
+    background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  }
+  .mi-ico { width: 42px; height: 42px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; flex: none; }
+  .mi-ico svg { width: 22px; height: 22px; }
+  .mi-text { flex: 1; display: flex; flex-direction: column; line-height: 1.3; }
+  .mi-text strong { font-size: 16px; }
+  .mi-text small { font-size: 13.5px; color: var(--muted); }
+  .menu-item > svg { width: 20px; height: 20px; color: var(--muted); }
+
+  .dpage > h3 { margin-top: 22px; }
+  .dpage > h3:first-child { margin-top: 8px; }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper .step-btn {
+    width: 44px; height: 44px; border-radius: 14px; border: 1.5px solid var(--line); background: transparent;
+    font-size: 22px; line-height: 1; display: grid; place-items: center; flex: none;
+  }
+  .stepper input { width: 120px; text-align: center; height: 44px; }
+  .ovr-list { list-style: none; margin: 0 0 14px; padding: 0; }
+  .ovr {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+    padding: 12px 14px; margin-bottom: 8px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface);
+  }
+  .ovr .o-main { display: flex; flex-direction: column; line-height: 1.3; }
+  .ovr .o-main strong { font-size: 15px; }
+  .ovr .o-main small { font-size: 13px; color: var(--muted); }
+  .ovr .o-goal { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 18px; white-space: nowrap; }
+  .empty { margin: 0 0 14px; font-size: 14.5px; color: var(--muted); }
+  .sel-text { font-weight: 600; margin: 14px 0 2px; min-height: 1.45em; }
+  .hint { margin: 0 0 18px; font-size: 13.5px; color: var(--muted); }
+  .edit-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .edit-actions .btn { flex: 1; }
+
+  .toast-wrap {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; justify-content: center; pointer-events: none;
+    padding: 0 20px calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  .toast {
+    background: var(--btn-bg); color: var(--btn-ink); padding: 11px 18px; border-radius: 99px; font-weight: 600; font-size: 14.5px;
+    opacity: 0; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.show { opacity: 1; transform: none; }
+
+  /* workouts + stats */
+  .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .page-head .sub { margin-bottom: 10px; }
+  .fab {
+    width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--btn-bg); color: var(--btn-ink);
+    display: grid; place-items: center; flex: none; box-shadow: 0 6px 16px var(--glow);
+  }
+  .fab:disabled { opacity: .35; box-shadow: none; cursor: default; }
+  .fab svg { width: 26px; height: 26px; }
+  .xgroup { padding: 16px 0 8px; border-top: 1px solid var(--line); }
+  .xgroup:first-child { border-top: 0; padding-top: 6px; }
+  .xhead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+  .xname { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .xcat { font-size: 13px; color: var(--muted); }
+  .xset { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+  .xset .sn { color: var(--muted); font-size: 14px; width: 74px; flex: none; }
+  .xset .sv { flex: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .xset .sx { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; flex: none; }
+  .xset .sx svg { width: 18px; height: 18px; }
+  .xadd { height: 40px; font-size: 14.5px; padding: 0 16px; margin: 2px 0 6px; }
+  .empty-state { color: var(--muted); font-size: 15px; margin: 30px 0; text-align: center; }
+
+  .st-sum { color: var(--muted); font-size: 15px; margin: 0; }
+  .st-cat { margin-top: 26px; }
+  .st-row { display: flex; justify-content: space-between; gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+  .st-name { font-weight: 600; font-size: 16px; }
+  .st-line { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+  .st-count { text-align: right; flex: none; }
+  .st-count strong { display: block; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .st-count span { font-size: 12.5px; color: var(--muted); }
+
+  .dc-actions .btn { padding: 0 8px; }
+  .seg { display: flex; gap: 8px; margin-top: 10px; }
+  .seg button { flex: 1; height: 46px; border-radius: 14px; border: 1.5px solid var(--line); background: transparent; font-weight: 600; font-size: 15px; }
+  .seg button[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-ink); border-color: var(--btn-bg); }
+
+  /* add-workout sheet */
+  .scrim2 { position: fixed; inset: 0; z-index: 30; background: rgba(8, 16, 24, .5); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  .scrim2.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 50%; bottom: 0; z-index: 40; width: min(100%, 480px); max-height: 88%;
+    display: flex; flex-direction: column; background: var(--bg); border-radius: 24px 24px 0 0;
+    border: 1px solid var(--line); border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px);
+    transform: translate(-50%, 105%); visibility: hidden;
+    transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s linear .3s;
+  }
+  .sheet.open { transform: translate(-50%, 0); visibility: visible; transition: transform .3s cubic-bezier(.3, .8, .3, 1), visibility 0s; }
+  .sheet-head { display: flex; align-items: center; gap: 4px; padding: 10px 10px 4px 14px; }
+  .sheet-head h2 { flex: 1; font-size: 20px; padding-left: 4px; }
+  .sheet-head h2:focus { outline: none; }
+  .sheet-body { overflow-y: auto; padding: 6px 20px 28px; }
+  .exrow { display: flex; align-items: center; }
+  .exrow .menu-item { flex: 1; }
+  .exrow .sx { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; flex: none; }
+  .exrow .sx svg { width: 18px; height: 18px; }
+  .addown { margin-top: 22px; }
+  .fields2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .fields3 { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 10px; margin-bottom: 14px; }
+  .logged-h { margin: 26px 0 4px; }
+  #sp-log .btn.wide + .btn.wide { margin-top: 10px; }
+
+  /* rewards */
+  .t-s1 { --l: var(--base-l); --d: var(--base-d); }
+  .t-s2 { --l: var(--bronze-l); --d: var(--bronze-d); }
+  .t-s3 { --l: var(--silver-l); --d: var(--silver-d); }
+  .t-s4 { --l: var(--gold-l); --d: var(--gold-d); }
+  .t-s5 { --l: var(--viol-l); --d: var(--viol-d); }
+  .stars { display: inline-flex; gap: 2px; flex: none; }
+  .stars svg { width: 15px; height: 15px; fill: none; stroke: var(--gold-d); stroke-width: 1.6; stroke-linejoin: round; }
+  .stars svg.on { fill: var(--gold-d); }
+  .bar { display: block; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: var(--p, 0%); border-radius: inherit; background: linear-gradient(90deg, var(--l), var(--d)); transition: width 1s cubic-bezier(.25, .8, .3, 1); }
+
+  .pts { display: flex; align-items: center; gap: 16px; margin: 6px 0 4px; }
+  .coin {
+    width: 78px; height: 78px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(145deg, var(--gold-l), var(--gold-d)); color: #14283A;
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 30px; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .35), 0 10px 20px var(--glow);
+  }
+  .coin.pop { animation: pop .7s ease; }
+  .pts-main { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.02em; line-height: 1.2; }
+  .pts-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
+
+  .rw-tier { margin-top: 28px; }
+  .rw-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .rw-head h3 { flex: 1; }
+  .rw-cost { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .rw-empty { margin: 0 0 10px; font-size: 14.5px; color: var(--muted); }
+  .rw-add { height: 40px; font-size: 14.5px; padding: 0 16px; }
+  .rw { padding: 8px 8px 12px 14px; margin-bottom: 10px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--surface); }
+  .rw.ready { border-color: var(--d); }
+  .rw-top { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+  .rw-info { flex: 1; min-width: 0; }
+  .rw-name { font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+  .rw-once { font-size: 13px; color: var(--muted); }
+  .pin { width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; flex: none; }
+  .pin svg { width: 22px; height: 22px; fill: none; stroke: currentColor; }
+  .pin[aria-pressed="true"] { color: var(--d); }
+  .pin[aria-pressed="true"] svg { fill: currentColor; }
+  .rw-prog { padding-right: 6px; margin-top: 2px; }
+  .rw-prog .txt { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+  .rw-redeem { width: 100%; margin-top: 12px; height: 44px; font-size: 15px; padding: 0 12px; }
+  .rw > .rw-prog, .rw > .rw-redeem { margin-right: 6px; width: calc(100% - 6px); }
+
+  .chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 600;
+  }
+  .chip svg { width: 16px; height: 16px; color: var(--bronze-d); }
+  .coin-sm { width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(145deg, var(--gold-l), var(--gold-d)); flex: none; }
+  .saving {
+    display: block; width: 100%; text-align: left; margin-top: 14px; padding: 14px; border-radius: 18px;
+    border: 1.5px solid var(--line); background: var(--surface);
+  }
+  .sv-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .sv-name { display: block; font-weight: 600; font-size: 16px; margin-top: 2px; overflow-wrap: anywhere; }
+  .saving .bar { margin-top: 10px; }
+  .sv-sub { display: block; font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+
+  .hist { list-style: none; margin: 0; padding: 0; }
+  .hist li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .hist .h-main { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+  .hist .h-main strong { font-size: 15px; overflow-wrap: anywhere; }
+  .hist .h-main small { font-size: 13px; color: var(--muted); }
+  .hist .h-cost { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 18px; white-space: nowrap; }
+  .tierpick { display: grid; gap: 8px; margin-top: 8px; }
+  .tierpick button {
+    display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border-radius: 14px;
+    border: 1.5px solid var(--line); background: transparent; font-weight: 600; font-size: 15.5px; text-align: left;
+  }
+  .tierpick button .t-cost { margin-left: auto; font-weight: 500; font-size: 14px; opacity: .8; }
+  .tierpick button[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-ink); border-color: var(--btn-bg); }
+  .gap-top { margin-top: 22px; }
+  .ovr-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ovr-row .ovr { margin-bottom: 0; flex: 1; min-width: 0; }
+  .trash { width: 52px; height: 52px; flex: none; border-radius: 14px; border: 1.5px solid var(--line); background: transparent; color: var(--danger); display: grid; place-items: center; }
+  .trash svg { width: 20px; height: 20px; }
+  .btn.danger-fill { background: var(--danger); color: #fff; }
+  :root[data-theme="dark"] .btn.danger-fill { color: #14283A; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.danger-fill { color: #14283A; } }
+
+  .rw-head h3 { display: flex; align-items: center; }
+  .rw-head .stars svg { width: 20px; height: 20px; }
+  .hist .h-main small, .ovr .o-main small { display: flex; align-items: center; gap: 6px; }
+  .hist .stars svg, .ovr .stars svg { width: 12px; height: 12px; }
+  .tierpick .stars svg { width: 20px; height: 20px; }
+  .sv-top .stars svg { width: 16px; height: 16px; }
+
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.rw-redeem:disabled { background: transparent; color: var(--muted); border: 1.5px solid var(--line); opacity: 1; }
+  .pts { position: relative; }
+  .coin-float {
+    position: absolute; left: 14px; top: -6px; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800;
+    font-size: 22px; color: var(--ink); opacity: 0; pointer-events: none;
+  }
+  .coin-float.go { animation: floatUp 1.4s ease-out; }
+  @keyframes floatUp { 0% { opacity: 0; transform: translateY(16px) scale(.8); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px) scale(1.1); } }
+  .scrim2.top { z-index: 44; }
+  .dlg {
+    position: fixed; left: 50%; top: 50%; z-index: 45; width: min(88vw, 360px); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 24px; padding: 22px 20px 18px; box-shadow: 0 24px 60px rgba(8, 16, 24, .45);
+    transform: translate(-50%, -46%) scale(.96); opacity: 0; visibility: hidden;
+    transition: transform .22s ease, opacity .22s ease, visibility 0s linear .22s;
+  }
+  .dlg.open { transform: translate(-50%, -50%); opacity: 1; visibility: visible; transition: transform .22s ease, opacity .22s ease, visibility 0s; }
+  .dlg h2 { font-size: 20px; }
+  .dlg h2:focus { outline: none; }
+  .dlg-reward { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; }
+  .dlg-reward strong { font-size: 17px; overflow-wrap: anywhere; }
+  .dlg p { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+  .dlg-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .dlg-actions .btn { flex: 1; }
+
+  .share-day { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .sd-label { display: flex; flex-direction: column; text-align: center; line-height: 1.25; }
+  .sd-label strong { font-size: 16px; }
+  .sd-label small { font-size: 13px; color: var(--muted); }
+  .seg button:disabled { opacity: .4; cursor: default; }
+  .share-prev { width: 100%; display: block; border-radius: 18px; border: 1px solid var(--line); margin: 18px 0 14px; background: var(--surface); }
+  .dc-actions .btn.icon { flex: none; width: 44px; padding: 0; display: grid; place-items: center; }
+  .dc-actions .btn.icon svg { width: 20px; height: 20px; }
+
+  .gear { position: relative; }
+  .gbadge { position: absolute; top: 9px; right: 9px; width: 11px; height: 11px; border-radius: 50%; background: #E5484D; border: 2px solid var(--bg); }
+  .menu-item .count { font-size: 12.5px; font-weight: 600; color: #fff; background: #E5484D; border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
+  .kv { display: grid; gap: 8px; margin: 12px 0 16px; }
+  .kv > div { display: flex; justify-content: space-between; gap: 12px; font-size: 14.5px; }
+  .kv span:first-child { color: var(--muted); }
+  .kv span:last-child { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .copyrow { display: flex; gap: 8px; margin-bottom: 12px; }
+  .copyrow input { font-size: 13.5px; height: 44px; }
+  .copyrow .btn { height: 44px; padding: 0 14px; font-size: 14.5px; }
+  .how { margin: 10px 0 0; padding-left: 20px; font-size: 14.5px; }
+  .how li { margin-bottom: 9px; }
+  .unread { width: 9px; height: 9px; border-radius: 50%; background: var(--focus); flex: none; margin-right: 8px; }
+  .ovr .o-main strong { display: flex; align-items: center; }
+  .ovr .o-right { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  button.chip { cursor: pointer; color: inherit; font: inherit; font-size: 14px; font-weight: 600; }
+  .shd-card { padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); margin: 6px 0 16px; }
+  .shd-card .dc-steps { margin-top: 0; }
+  .shd-card .bar { margin-top: 10px; background: var(--line); }
+  .shd-card .bar > i { background: linear-gradient(90deg, var(--dia-l), var(--dia-d)); }
+  .okline { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slosh, .splash, .bubble, .ripple, .drop, .ring, .sweep, .spark, .glint, .coin-float, .hero.done::before { animation: none !important; }
+    .dlg, .dlg.open, .w-body, .w-top, .toast, .scrim, .drawer, .drawer.open, .scrim2, .sheet, .sheet.open { transition: none; }
+    .hero.pop, .coin.pop { animation: none; }
+    .bar > i { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">Brim</div>
+    <nav class="daynav" aria-label="Choose a day">
+      <button class="icon-btn" id="prevDay" type="button" aria-label="Previous day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="daylabel" aria-live="polite"><span id="dayMain"></span><span id="daySub"></span></div>
+      <button class="icon-btn" id="nextDay" type="button" aria-label="Next day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </nav>
+    <button class="icon-btn gear" id="openSettings" type="button" aria-label="Open settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="gbadge" id="gearBadge" hidden></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- Steps view -->
+    <section id="view-steps" aria-label="Steps">
+      <div class="stage" id="stage" data-tier="base">
+        <div class="hero" id="hero" role="img" aria-label="0 steps">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <clipPath id="orbClip"><circle cx="100" cy="100" r="94"/></clipPath>
+              <clipPath id="bodyClip"><rect id="bodyClipRect" x="-100" y="206" width="400" height="400"/></clipPath>
+              <radialGradient id="glass" cx="40%" cy="32%" r="80%">
+                <stop offset="0" stop-color="#FBFEFF"/><stop offset=".7" stop-color="#E4F0F5"/><stop offset="1" stop-color="#C9DDE7"/>
+              </radialGradient>
+              <radialGradient id="shade" cx="36%" cy="30%" r="84%">
+                <stop offset="0" stop-color="#0A2236" stop-opacity="0"/>
+                <stop offset=".55" stop-color="#0A2236" stop-opacity="0"/>
+                <stop offset=".85" stop-color="#0A2236" stop-opacity=".22"/>
+                <stop offset="1" stop-color="#0A2236" stop-opacity=".46"/>
+              </radialGradient>
+              <radialGradient id="bounce" cx="72%" cy="86%" r="42%">
+                <stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="depth" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0A2236" stop-opacity="0"/><stop offset="1" stop-color="#0A2236" stop-opacity=".3"/>
+              </linearGradient>
+              <radialGradient id="hl" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="ground" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#0A2236" stop-opacity=".34"/><stop offset="1" stop-color="#0A2236" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="sweepGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <ellipse cx="100" cy="207" rx="66" ry="9" fill="url(#ground)"/>
+            <circle cx="100" cy="100" r="94" fill="url(#glass)"/>
+
+            <g clip-path="url(#orbClip)">
+              <g id="slosh">
+                <rect class="w-body" id="waterBody" x="-100" y="206" width="400" height="400"/>
+                <rect id="waterDepth" x="-100" y="206" width="400" height="260" fill="url(#depth)"/>
+                <g clip-path="url(#bodyClip)" id="bubbles"></g>
+                <path class="w-top" id="surface" d=""/>
+                <ellipse class="ripple r1" id="rip1" cx="100" cy="206" rx="0" ry="0"/>
+                <ellipse class="ripple r2" id="rip2" cx="100" cy="206" rx="0" ry="0"/>
+                <path class="w-rim" id="surfaceRim" d=""/>
+              </g>
+              <circle cx="100" cy="100" r="94" fill="url(#bounce)"/>
+              <circle cx="100" cy="100" r="94" fill="url(#shade)"/>
+              <g transform="rotate(20 100 100)"><rect class="sweep" id="sweep" x="-90" y="-20" width="60" height="240" fill="url(#sweepGrad)"/></g>
+            </g>
+
+            <circle cx="100" cy="100" r="93" fill="none" stroke="var(--orb-rim)" stroke-width="2.5"/>
+            <path d="M165.5 145.9 A80 80 0 0 1 120.7 177.3" fill="none" stroke="#fff" stroke-opacity=".42" stroke-width="3.5" stroke-linecap="round"/>
+            <ellipse cx="62" cy="48" rx="30" ry="13" transform="rotate(-36 62 48)" fill="url(#hl)" opacity=".9"/>
+            <circle cx="85" cy="30" r="3.6" fill="#fff" opacity=".95"/>
+
+            <circle class="ring" id="ring" cx="100" cy="100" r="94"/>
+            <g id="burst"></g>
+            <g transform="translate(24 78)"><path class="spark s1" d="M0 -8 L2.2 -2.2 L8 0 L2.2 2.2 L0 8 L-2.2 2.2 L-8 0 L-2.2 -2.2Z"/></g>
+            <g transform="translate(176 56)"><path class="spark s2" d="M0 -8 L2.2 -2.2 L8 0 L2.2 2.2 L0 8 L-2.2 2.2 L-8 0 L-2.2 -2.2Z"/></g>
+            <g transform="translate(160 176)"><path class="spark s3" d="M0 -8 L2.2 -2.2 L8 0 L2.2 2.2 L0 8 L-2.2 2.2 L-8 0 L-2.2 -2.2Z"/></g>
+          </svg>
+          <div class="readout" aria-hidden="true">
+            <div class="count" id="count">0</div>
+            <div class="of" id="ofGoal">of 10,000</div>
+          </div>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+      </div>
+
+      <div class="chips" id="chips">
+        <span class="chip" id="chipStreak" hidden>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.9 3.4 5.5 5.6 5.5 10.5a5.5 5.5 0 0 1-11 0c0-2.2 1-3.6 2.2-4.9.3 1.4.9 2.2 1.8 2.7C10.2 8.4 10.6 5.3 12 2.5z"/></svg>
+          <span id="chipStreakTxt"></span>
+        </span>
+        <span class="chip"><span class="coin-sm" aria-hidden="true"></span><span id="chipPtsTxt">0 points</span></span>
+      </div>
+
+      <button class="saving" id="saving" type="button" hidden>
+        <span class="sv-top"><span>Saving for</span><span id="svStars"></span></span>
+        <span class="sv-name" id="svName"></span>
+        <span class="bar"><i id="svFill"></i></span>
+        <span class="sv-sub" id="svSub"></span>
+      </button>
+
+      <div class="log">
+        <label class="lbl" for="stepsInput" id="logLabel">Steps today</label>
+        <div class="row">
+          <input type="text" id="stepsInput" inputmode="numeric" autocomplete="off" placeholder="From the Health app">
+          <button class="btn" id="saveSteps" type="button">Save steps</button>
+        </div>
+        <p class="err" id="stepsErr" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- Progress photo view -->
+    <section id="view-photo" aria-label="Progress photo" hidden>
+      <h2>Progress photo</h2>
+      <p class="sub" id="photoDay"></p>
+      <div class="frame" id="frame">
+        <img id="photoImg" alt="" hidden>
+        <button class="add" id="addBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h3.6a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>
+          <span id="addLabel">Add today's photo</span>
+          <small>Take one now or choose from your library.</small>
+        </button>
+      </div>
+      <div class="actions" id="photoActions" hidden>
+        <button class="btn ghost" id="replaceBtn" type="button">Replace photo</button>
+        <button class="btn ghost" id="removeBtn" type="button">Remove photo</button>
+      </div>
+      <p class="note" id="persistNote" hidden>This browser can't keep photos between visits, so they'll be gone when you close the page.</p>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+
+      <div class="block" id="photoStripSec" hidden>
+        <h3>All photos</h3>
+        <p class="sub">Tap a day to open it.</p>
+        <ul class="strip" id="photoStrip"></ul>
+      </div>
+
+      <div class="block" id="cmpSec" hidden>
+        <h3>Then and now</h3>
+        <p class="sub" id="cmpSub"></p>
+        <div class="cmp">
+          <figure><img id="cmpA" alt="Your first progress photo"><figcaption id="cmpCapA"></figcaption></figure>
+          <figure><img id="cmpB" alt="Your latest progress photo"><figcaption id="cmpCapB"></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calendar view -->
+    <section id="view-cal" aria-label="Calendar" hidden>
+      <div id="mainCal"></div>
+      <div class="daycard" id="dayCard">
+        <div>
+          <div class="dc-date" id="dcDate"></div>
+          <div class="dc-steps" id="dcSteps"></div>
+          <div class="dc-goal" id="dcGoal"></div>
+          <div class="dc-goal" id="dcWork"></div>
+        </div>
+        <div class="dc-thumb" id="dcThumb"></div>
+        <div class="dc-actions">
+          <button class="btn ghost" id="dcEdit" type="button">Edit steps</button>
+          <button class="btn ghost" id="dcPhoto" type="button">Photo</button>
+          <button class="btn ghost" id="dcWorkBtn" type="button">Workout</button>
+          <button class="btn ghost icon" id="dcShare" type="button" aria-label="Share this day">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workouts view -->
+    <section id="view-work" aria-label="Workouts" hidden>
+      <div class="page-head">
+        <div>
+          <h2>Workouts</h2>
+          <p class="sub" id="workDay"></p>
+        </div>
+        <button class="fab" id="addWorkout" type="button" aria-label="Add a workout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div id="workList"></div>
+      <p class="empty-state" id="workEmpty"></p>
+    </section>
+
+    <!-- Stats view -->
+    <section id="view-stats" aria-label="Stats" hidden>
+      <h2>Stats</h2>
+      <p class="sub">Everything you've logged, added up.</p>
+      <p class="st-sum" id="statSum"></p>
+      <div id="statList"></div>
+      <p class="empty-state" id="statEmpty">Log a workout and your set counts and best weights will show up here.</p>
+    </section>
+
+    <!-- Rewards view -->
+    <section id="view-rewards" aria-label="Rewards" hidden>
+      <h2>Rewards</h2>
+      <p class="sub">Every day you reach your step goal earns 100 points.</p>
+      <div class="pts">
+        <div class="coin" id="coin" aria-hidden="true">0</div>
+        <span class="coin-float" id="coinFloat" aria-hidden="true"></span>
+        <div>
+          <div class="pts-main" id="ptsMain">0 points to spend</div>
+          <div class="pts-sub" id="ptsSub"></div>
+          <div class="pts-sub" id="ptsStreak"></div>
+        </div>
+      </div>
+      <p class="pts-sub" id="ptsNext" style="margin-top:10px"></p>
+      <div id="rwStore"></div>
+      <div class="block" id="rwHistSec" hidden>
+        <h3>Redeemed</h3>
+        <ul class="hist" id="rwHist"></ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Bottom tab bar -->
+<nav class="tabbar" id="tabbar" aria-label="Views">
+  <div class="tabbar-in">
+    <button class="tab" type="button" data-view="steps" aria-current="page">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="11" rx="3" ry="4"/><ellipse cx="8" cy="19" rx="2.2" ry="2"/><ellipse cx="16" cy="7" rx="3" ry="4"/><ellipse cx="16" cy="14.5" rx="2.2" ry="2"/></svg></span>
+      <span>Steps</span>
+    </button>
+    <button class="tab" type="button" data-view="photo">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h3.6a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg></span>
+      <span>Photo</span>
+    </button>
+    <button class="tab" type="button" data-view="cal">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>
+      <span>Calendar</span>
+    </button>
+    <button class="tab" type="button" data-view="work">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span>
+      <span>Workouts</span>
+    </button>
+    <button class="tab" type="button" data-view="stats">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-8M12 20V4M19 20v-5"/></svg></span>
+      <span>Stats</span>
+    </button>
+    <button class="tab" type="button" data-view="rewards">
+      <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12M12 8v13"/><path d="M12 8C10 8 7.5 7.5 7.5 5.5 7.5 4.4 8.4 3.5 9.5 3.5 11 3.5 12 5.5 12 8zM12 8c2 0 4.5-.5 4.5-2.5 0-1.1-.9-2-2-2C13 3.5 12 5.5 12 8z"/></svg></span>
+      <span>Rewards</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Settings drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <header class="drawer-head">
+    <button class="icon-btn" id="drawerBack" type="button" aria-label="Back" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2 id="drawerTitle" tabindex="-1">Settings</h2>
+    <button class="icon-btn" id="drawerClose" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+  <div class="drawer-body" id="drawerBody">
+
+    <div class="dpage" id="dp-menu">
+      <ul class="menu">
+        <li>
+          <button class="menu-item" id="openGoals" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span>
+            <span class="mi-text"><strong>Step goals</strong><small>Base goal and goals for certain days</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openRewards" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12M12 8v13"/><path d="M12 8C10 8 7.5 7.5 7.5 5.5 7.5 4.4 8.4 3.5 9.5 3.5 11 3.5 12 5.5 12 8zM12 8c2 0 4.5-.5 4.5-2.5 0-1.1-.9-2-2-2C13 3.5 12 5.5 12 8z"/></svg></span>
+            <span class="mi-text"><strong>Rewards</strong><small>Choose what your points can buy</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openShare" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.6 3.4-5.6 7-5.6s6.4 2 7 5.6"/></svg></span>
+            <span class="mi-text"><strong>Profile and sharing</strong><small>Your name, and sharing a day with someone</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openInbox" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5l2.2-7A2 2 0 0 1 7.6 5h8.8a2 2 0 0 1 1.9 1.5l2.2 7"/><path d="M3.5 13.5V18a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-4.5h-4.5l-1 2h-6l-1-2z"/></svg></span>
+            <span class="mi-text"><strong>Shared with me</strong><small>Cards other Brim users sent you</small></span>
+            <span class="count" id="inboxCount" hidden></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openCloud" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/></svg></span>
+            <span class="mi-text"><strong>Cloud sync and Health</strong><small>Sign in, shares, iPhone Health steps</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openUnits" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="2"/><path d="M6.5 8v3M10.5 8v3M14.5 8v3M18.5 8v3"/></svg></span>
+            <span class="mi-text"><strong>Units</strong><small>Pounds or kilograms, miles or kilometers</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openBackup" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg></span>
+            <span class="mi-text"><strong>Backup and restore</strong><small>Save your data to a file or bring it back</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="dpage" id="dp-goals" hidden>
+      <h3>Base goal</h3>
+      <p class="sub">Used on every day that doesn't have its own goal. A change starts today, so past days keep the goal they had.</p>
+      <div class="stepper">
+        <button class="step-btn" id="baseDown" type="button" aria-label="Lower base goal by 500">&minus;</button>
+        <input type="text" id="baseInput" inputmode="numeric" autocomplete="off" aria-label="Base goal in steps">
+        <button class="step-btn" id="baseUp" type="button" aria-label="Raise base goal by 500">+</button>
+      </div>
+
+      <h3>Certain days and periods</h3>
+      <p class="sub">Give a rest day, a busy week or a trip its own goal.</p>
+      <ul class="ovr-list" id="ovrList"></ul>
+      <p class="empty" id="ovrEmpty">Nothing set yet.</p>
+      <button class="btn wide" id="addOvr" type="button">Add a day or period</button>
+    </div>
+
+    <div class="dpage" id="dp-edit" hidden>
+      <div id="editCal"></div>
+      <p class="sel-text" id="editSel" aria-live="polite"></p>
+      <p class="hint" id="editHint"></p>
+      <label class="lbl" for="editGoal">Goal for these days</label>
+      <div class="stepper">
+        <button class="step-btn" id="editDown" type="button" aria-label="Lower goal by 500">&minus;</button>
+        <input type="text" id="editGoal" inputmode="numeric" autocomplete="off">
+        <button class="step-btn" id="editUp" type="button" aria-label="Raise goal by 500">+</button>
+      </div>
+      <div class="edit-actions">
+        <button class="btn" id="saveOvr" type="button">Save</button>
+        <button class="btn ghost danger" id="delOvr" type="button" hidden>Delete</button>
+      </div>
+    </div>
+
+    <div class="dpage" id="dp-rewards" hidden>
+      <h3>Your rewards</h3>
+      <p class="sub">Rewards are rated from 1 to 5 stars. More stars cost more points: 250, 500, 1,500, 3,000 or 5,000.</p>
+      <ul class="ovr-list" id="rwList"></ul>
+      <p class="empty" id="rwEmpty">No rewards yet.</p>
+      <button class="btn wide" id="addReward" type="button">Add a reward</button>
+    </div>
+
+    <div class="dpage" id="dp-reward" hidden>
+      <label class="lbl" for="rwName">Reward</label>
+      <input type="text" id="rwName" maxlength="60" autocomplete="off" placeholder="New running shoes">
+      <p class="lbl gap-top" id="rwTierLbl">Cost</p>
+      <div class="tierpick" id="rwTiers" role="group" aria-labelledby="rwTierLbl"></div>
+      <p class="lbl gap-top" id="rwOnceLbl">How often</p>
+      <div class="seg" id="rwOnce" role="group" aria-labelledby="rwOnceLbl">
+        <button type="button" data-once="0" aria-pressed="true">Any time</button>
+        <button type="button" data-once="1" aria-pressed="false">Just once</button>
+      </div>
+      <p class="err" id="rwErr" role="alert" hidden></p>
+      <div class="edit-actions">
+        <button class="btn" id="saveReward" type="button">Save</button>
+        <button class="btn ghost danger" id="delReward" type="button" hidden>Delete</button>
+      </div>
+    </div>
+
+    <div class="dpage" id="dp-share" hidden>
+      <h3>Your profile</h3>
+      <p class="sub">This device is your profile, so what you log stays on it. Your name shows on the cards you share.</p>
+      <label class="lbl" for="profName">Your name</label>
+      <input type="text" id="profName" maxlength="30" autocomplete="off" placeholder="Your name">
+      <p class="hint" id="myCode" hidden style="margin-top:10px"></p>
+
+      <h3>Share a day</h3>
+      <p class="sub">Build a card from a day's steps, workouts and photo, then send it to someone from your phone's share sheet.</p>
+      <div class="share-day">
+        <button class="icon-btn" id="shPrev" type="button" aria-label="Previous day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="sd-label" aria-live="polite"><strong id="shDay"></strong><small id="shRel"></small></div>
+        <button class="icon-btn" id="shNext" type="button" aria-label="Next day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <p class="lbl gap-top" id="shIncLbl">Include</p>
+      <div class="seg" id="shInc" role="group" aria-labelledby="shIncLbl">
+        <button type="button" data-k="steps" aria-pressed="true">Steps</button>
+        <button type="button" data-k="workouts" aria-pressed="true">Workouts</button>
+        <button type="button" data-k="photo" aria-pressed="true">Photo</button>
+      </div>
+      <p class="hint" id="shNote" style="margin-top:12px"></p>
+      <img class="share-prev" id="shPreview" alt="Preview of the card you are sharing" hidden>
+      <button class="btn wide" id="shGo" type="button" disabled>Share</button>
+
+      <div id="sendIn" hidden>
+        <h3 style="margin-top:26px">Send in Brim</h3>
+        <p class="sub">Send this card to another Brim user. It appears under Shared with me on their phone.</p>
+        <label class="lbl" for="sendCode">Their friend code</label>
+        <div class="row">
+          <input type="text" id="sendCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sam-4f2k">
+          <button class="btn" id="sendGo" type="button">Send</button>
+        </div>
+        <div class="chips" id="sendContacts" style="justify-content:flex-start;margin-top:10px"></div>
+        <p class="err" id="sendErr" role="alert" hidden></p>
+      </div>
+      <p class="hint" id="sendHint" hidden>To send cards inside Brim, set up Cloud sync first (Settings, Cloud sync and Health).</p>
+    </div>
+
+    <div class="dpage" id="dp-cloud" hidden>
+      <p class="sub" id="cloudIntro"></p>
+
+      <div id="cloudConnect" hidden>
+        <label class="lbl" for="cfgUrl">Supabase project URL</label>
+        <input type="text" id="cfgUrl" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://abcdefgh.supabase.co">
+        <label class="lbl gap-top" for="cfgKey">Public key (anon or publishable)</label>
+        <input type="text" id="cfgKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the public key">
+        <button class="btn wide gap-top" id="cfgSave" type="button">Connect</button>
+      </div>
+
+      <div id="cloudAuth" hidden>
+        <label class="lbl" for="authName">Your name</label>
+        <input type="text" id="authName" maxlength="30" autocomplete="off" placeholder="Shown on cards you send">
+        <label class="lbl gap-top" for="authEmail">Email</label>
+        <input type="text" id="authEmail" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false">
+        <label class="lbl gap-top" for="authPass">Password</label>
+        <input type="password" id="authPass" autocomplete="current-password">
+        <div class="edit-actions">
+          <button class="btn" id="authIn" type="button">Sign in</button>
+          <button class="btn ghost" id="authUp" type="button">Create account</button>
+        </div>
+        <button class="btn ghost wide gap-top" id="cfgReset" type="button">Use a different project</button>
+      </div>
+
+      <div id="cloudIn" hidden>
+        <div class="kv">
+          <div><span>Signed in as</span><span id="kvEmail"></span></div>
+          <div><span>Your friend code</span><span id="kvCode"></span></div>
+          <div><span>Status</span><span id="cloudSync"></span></div>
+        </div>
+        <div class="edit-actions" style="margin-top:0">
+          <button class="btn" id="syncNow" type="button">Sync now</button>
+          <button class="btn ghost" id="signOut" type="button">Sign out</button>
+        </div>
+
+        <h3 style="margin-top:28px">Health steps</h3>
+        <p class="sub">A shortcut on your iPhone reads today's steps from the Health app and sends them here. Brim picks them up every minute or two while it is open.</p>
+        <label class="lbl" for="valUrl">Web address (URL)</label>
+        <div class="copyrow"><input type="text" id="valUrl" readonly><button class="btn ghost" type="button" data-copy="valUrl">Copy</button></div>
+        <label class="lbl" for="valKey">Header apikey</label>
+        <div class="copyrow"><input type="text" id="valKey" readonly><button class="btn ghost" type="button" data-copy="valKey">Copy</button></div>
+        <label class="lbl" for="valTok">Your private token</label>
+        <div class="copyrow"><input type="text" id="valTok" readonly><button class="btn ghost" type="button" data-copy="valTok">Copy</button></div>
+        <button class="btn ghost wide" id="tokTest" type="button">Check that my token works</button>
+        <p class="okline" id="tokMsg" hidden></p>
+        <p class="sub" style="margin-top:18px">Keep the token private. Anyone who has it can change your step count.</p>
+        <ol class="how">
+          <li>In the Shortcuts app, tap + and name it "Send steps to Brim".</li>
+          <li>Add <strong>Find Health Samples</strong>. Set Type to Steps and add the filter Start Date is Today.</li>
+          <li>Add <strong>Calculate Statistics</strong> and choose Sum.</li>
+          <li>Add <strong>Format Date</strong> on the Current Date. Choose Custom and enter <strong>yyyy-MM-dd</strong>.</li>
+          <li>Add <strong>Get Contents of URL</strong>. Paste the web address above, set Method to POST, and add two headers: <strong>apikey</strong> (the value above) and <strong>Content-Type</strong> set to <strong>application/json</strong>.</li>
+          <li>Set Request Body to JSON with three fields: <strong>p_token</strong> (Text, your token), <strong>p_day</strong> (Text, the formatted date) and <strong>p_steps</strong> (Number, the Statistics result).</li>
+          <li>Run it once and allow Health access to Steps. Then tap Sync now here.</li>
+          <li>To run it automatically, open Automation in Shortcuts, tap +, choose Time of Day (for example noon, 6 pm and 10 pm), pick this shortcut and turn on Run Immediately. Health data can't be read while the phone is locked, so if a run doesn't update, tap the shortcut from your Home Screen.</li>
+        </ol>
+      </div>
+
+      <p class="err" id="cloudErr" role="alert" hidden></p>
+    </div>
+
+    <div class="dpage" id="dp-inbox" hidden>
+      <div class="seg" id="inboxTabs" role="group" aria-label="Shared items">
+        <button type="button" data-t="in" aria-pressed="true">Received</button>
+        <button type="button" data-t="out" aria-pressed="false">Sent</button>
+      </div>
+      <p class="empty" id="inboxEmpty" style="margin-top:16px"></p>
+      <ul class="ovr-list" id="inboxList" style="margin-top:14px"></ul>
+      <button class="btn ghost wide" id="inboxRefresh" type="button">Refresh</button>
+    </div>
+
+    <div class="dpage" id="dp-shared" hidden>
+      <p class="sub" id="shdMeta"></p>
+      <img class="share-prev" id="shdPhoto" alt="Photo in this shared card" hidden style="margin-top:6px">
+      <div class="shd-card" id="shdSteps" hidden>
+        <div class="dc-steps" id="shdStepsTxt"></div>
+        <div class="dc-goal" id="shdGoalTxt"></div>
+        <span class="bar"><i id="shdFill"></i></span>
+      </div>
+      <h3 id="shdWH" hidden>Workouts</h3>
+      <ul class="hist" id="shdLines"></ul>
+      <div class="edit-actions"><button class="btn ghost danger" id="shdDelete" type="button">Delete</button></div>
+    </div>
+
+    <div class="dpage" id="dp-backup" hidden>
+      <h3>Save a backup</h3>
+      <p class="sub">Puts your steps, workouts, rewards, settings and photos in one file. Use it to keep a copy or to move Brim to a different place.</p>
+      <button class="btn wide" id="bkExport" type="button">Save backup file</button>
+      <h3 style="margin-top:28px">Restore</h3>
+      <p class="sub">Restoring replaces everything in Brim on this device with what is in the file.</p>
+      <button class="btn ghost wide" id="bkImport" type="button">Choose a backup file</button>
+      <input type="file" id="bkFile" accept=".json,application/json" hidden>
+      <p class="err" id="bkErr" role="alert" hidden></p>
+    </div>
+
+    <div class="dpage" id="dp-units" hidden>
+      <h3>Weight</h3>
+      <div class="seg" role="group" aria-label="Weight unit">
+        <button type="button" data-u="w:lb" aria-pressed="true">Pounds (lb)</button>
+        <button type="button" data-u="w:kg" aria-pressed="false">Kilograms (kg)</button>
+      </div>
+      <h3>Distance</h3>
+      <div class="seg" role="group" aria-label="Distance unit">
+        <button type="button" data-u="d:mi" aria-pressed="true">Miles (mi)</button>
+        <button type="button" data-u="d:km" aria-pressed="false">Kilometers (km)</button>
+      </div>
+      <p class="sub" style="margin-top:16px">Workouts you've already logged convert automatically when you switch.</p>
+    </div>
+
+  </div>
+</aside>
+
+<!-- Add-workout sheet -->
+<div class="scrim2" id="sheetScrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <header class="sheet-head">
+    <button class="icon-btn" id="sheetBack" type="button" aria-label="Back" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <h2 id="sheetTitle" tabindex="-1">Add a workout</h2>
+    <button class="icon-btn" id="sheetClose" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+  <div class="sheet-body" id="sheetBody">
+
+    <div class="spage" id="sp-cat">
+      <ul class="menu" id="catList"></ul>
+    </div>
+
+    <div class="spage" id="sp-ex" hidden>
+      <ul class="menu" id="exList"></ul>
+      <div class="addown">
+        <label class="lbl" for="ownName">Add your own exercise</label>
+        <div class="row">
+          <input type="text" id="ownName" maxlength="40" autocomplete="off" placeholder="Exercise name">
+          <button class="btn" id="ownAdd" type="button">Add</button>
+        </div>
+        <p class="err" id="ownErr" role="alert" hidden></p>
+      </div>
+    </div>
+
+    <div class="spage" id="sp-log" hidden>
+      <p class="sub" id="logFor"></p>
+      <div class="fields2" id="fieldsStrength">
+        <div><label class="lbl" for="inWeight" id="lblW">Weight (lb)</label><input type="text" id="inWeight" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        <div><label class="lbl" for="inReps">Reps</label><input type="text" id="inReps" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+      </div>
+      <div class="fields3" id="fieldsCardio" hidden>
+        <div><label class="lbl" for="inMin">Minutes</label><input type="text" id="inMin" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+        <div><label class="lbl" for="inSec">Seconds</label><input type="text" id="inSec" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+        <div><label class="lbl" for="inDist" id="lblD">Distance (mi)</label><input type="text" id="inDist" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+      </div>
+      <button class="btn wide" id="addSet" type="button">Add set</button>
+      <p class="err" id="setErr" role="alert" hidden></p>
+      <h3 class="logged-h" id="loggedH"></h3>
+      <div id="loggedList"></div>
+      <button class="btn ghost wide" id="sheetDone" type="button" style="margin-top:18px">Done</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Redeem confirmation -->
+<div class="scrim2 top" id="dlgScrim"></div>
+<div class="dlg" id="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgBody">
+  <h2 id="dlgTitle" tabindex="-1">Redeem this reward?</h2>
+  <div class="dlg-reward"><span id="dlgStars"></span><strong id="dlgName"></strong></div>
+  <p id="dlgBody"></p>
+  <div class="dlg-actions">
+    <button class="btn ghost" id="dlgCancel" type="button">Cancel</button>
+    <button class="btn" id="dlgOk" type="button">Redeem</button>
+  </div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast" role="status" aria-live="polite"></div></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const nf = new Intl.NumberFormat();
+
+  /* ---------- dates ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+  const todayKey = () => keyOf(new Date());
+  const shiftKey = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
+  const fmtLong = k => parseKey(k).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const fmtShort = k => parseKey(k).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const fmtFull = k => parseKey(k).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const daysBetween = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 86400000);
+  const relLabel = k => {
+    const n = daysBetween(k, todayKey());
+    return n === 0 ? 'Today' : n === 1 ? 'Yesterday' : n > 1 ? n + ' days ago' : 'In ' + (-n) + ' days';
+  };
+  const isKey = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  function fmtRange(s, e) {
+    if (s === e) return fmtFull(s);
+    return parseKey(s).getFullYear() === parseKey(e).getFullYear() ? `${fmtShort(s)} to ${fmtFull(e)}` : `${fmtFull(s)} to ${fmtFull(e)}`;
+  }
+
+  /* ---------- steps + goals storage ---------- */
+  const LS_KEY = 'brim:v1';
+  const DEFAULT_GOAL = 10000;
+  const clampGoal = n => Math.max(500, Math.min(100000, Math.round(n)));
+  const state = { v: 2, base: [{ from: '1970-01-01', goal: DEFAULT_GOAL }], overrides: [], days: {}, workouts: {}, customEx: {}, units: { w: 'lb', d: 'mi' }, rewards: [], redeemed: [], pinned: null, pv: 2, profile: { name: '' } };
+  function resetState() {
+    Object.assign(state, { v: 2, base: [{ from: '1970-01-01', goal: DEFAULT_GOAL }], overrides: [], days: {}, workouts: {}, customEx: {},
+      units: { w: 'lb', d: 'mi' }, rewards: [], redeemed: [], pinned: null, pv: 2, profile: { name: '' } });
+  }
+  function hydrate(p) {
+    {
+      {
+      if (p && typeof p === 'object') {
+        if (p.days && typeof p.days === 'object') state.days = p.days;
+        if (p.workouts && typeof p.workouts === 'object') {
+          for (const day in p.workouts) {
+            const arr = p.workouts[day];
+            if (!isKey(day) || !Array.isArray(arr)) continue;
+            const clean = arr.filter(e => e && typeof e.ex === 'string' && e.ex.indexOf('|') > 0).map(e => {
+              const out = { id: String(e.id || Math.random().toString(36).slice(2)), ex: e.ex === 'chest|Shoulder Press' ? 'aux|Shoulder Press' : e.ex };
+              if (e.ex.startsWith('cardio|')) { out.sec = Math.max(0, +e.sec || 0); out.km = Math.max(0, +e.km || 0); }
+              else { out.kg = Math.max(0, +e.kg || 0); out.reps = Math.max(1, Math.round(+e.reps || 1)); }
+              return out;
+            });
+            if (clean.length) state.workouts[day] = clean;
+          }
+        }
+        if (p.customEx && typeof p.customEx === 'object') {
+          for (const c in p.customEx) {
+            if (Array.isArray(p.customEx[c])) state.customEx[c] = p.customEx[c].filter(n => typeof n === 'string' && n.trim()).map(n => n.trim().slice(0, 40));
+          }
+        }
+        const LEG = { week: 'star2', month: 'star4', twomonth: 'star5' };
+        const okTier = t => LEG[t] || (/^star[1-5]$/.test(String(t)) ? t : null);
+        const COST = { star1: 250, star2: 500, star3: 1500, star4: 3000, star5: 5000 };
+        if (Array.isArray(p.rewards)) {
+          state.rewards = p.rewards
+            .filter(r => r && typeof r.name === 'string' && r.name.trim() && okTier(r.tier))
+            .map(r => ({ id: String(r.id || Math.random().toString(36).slice(2)), name: r.name.trim().slice(0, 60), tier: okTier(r.tier), once: !!r.once }));
+        }
+        if (Array.isArray(p.redeemed)) {
+          state.redeemed = p.redeemed
+            .filter(r => r && typeof r.name === 'string' && +r.cost > 0 && isKey(r.day))
+            .map(r => ({ id: String(r.id || Math.random().toString(36).slice(2)), name: r.name.slice(0, 60), tier: okTier(r.tier) || 'star1', cost: p.pv === 2 ? Math.round(+r.cost) : COST[okTier(r.tier) || 'star1'], day: r.day, ts: +r.ts || 0 }));
+        }
+        if (typeof p.pinned === 'string') state.pinned = p.pinned;
+        if (p.profile && typeof p.profile.name === 'string') state.profile.name = p.profile.name.trim().slice(0, 30);
+        if (p.units && (p.units.w === 'lb' || p.units.w === 'kg')) state.units.w = p.units.w;
+        if (p.units && (p.units.d === 'mi' || p.units.d === 'km')) state.units.d = p.units.d;
+        if (p.v === 2) {
+          const base = Array.isArray(p.base) ? p.base.filter(e => e && isKey(e.from) && +e.goal > 0) : [];
+          if (base.length) state.base = base.map(e => ({ from: e.from, goal: Math.round(+e.goal) }));
+          if (Array.isArray(p.overrides)) {
+            state.overrides = p.overrides.filter(o => o && isKey(o.start) && isKey(o.end) && +o.goal > 0 && o.start <= o.end)
+              .map(o => ({ id: String(o.id), start: o.start, end: o.end, goal: Math.round(+o.goal) }));
+          }
+        } else {
+          // migrate from the first version: one goal, plus a goal saved on each day
+          const g = +p.goal > 0 ? Math.round(+p.goal) : DEFAULT_GOAL;
+          state.base = [{ from: '1970-01-01', goal: g }];
+          for (const k in state.days) {
+            const d = state.days[k];
+            if (d && d.goal && d.goal !== g && isKey(k)) state.overrides.push({ id: 'm' + k, start: k, end: k, goal: Math.round(d.goal) });
+            if (d) delete d.goal;
+          }
+        }
+      }
+      }
+    }
+    state.base.sort((a, b) => (a.from < b.from ? -1 : 1));
+  }
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) hydrate(JSON.parse(raw)); } catch (e) { /* storage unavailable: keep in memory */ }
+  state.base.sort((a, b) => (a.from < b.from ? -1 : 1));
+  const persist = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} };
+
+  function baseGoalOn(k) {
+    let g = state.base[0].goal;
+    for (const e of state.base) { if (e.from <= k) g = e.goal; else break; }
+    return g;
+  }
+  function overrideFor(k) {
+    for (let i = state.overrides.length - 1; i >= 0; i--) {
+      const o = state.overrides[i];
+      if (k >= o.start && k <= o.end) return o;
+    }
+    return null;
+  }
+  const goalOf = k => { const o = overrideFor(k); return o ? o.goal : baseGoalOn(k); };
+  const stepsOf = k => (state.days[k] && state.days[k].steps) || 0;
+  const thresholds = g => [Math.ceil(g / 3), Math.ceil(g * 2 / 3), g];
+  const rankOf = (steps, goal) => {
+    const th = thresholds(goal);
+    return steps >= th[2] ? 3 : steps >= th[1] ? 2 : steps >= th[0] ? 1 : 0;
+  };
+  const TIERS = ['base', 'bronze', 'silver', 'gold'];
+  const TIER_NAMES = ['', 'Bronze', 'Silver', 'Gold'];
+  const RING = ['var(--base-d)', 'var(--bronze-d)', 'var(--silver-d)', 'var(--gold-d)'];
+  const CF = ['var(--cf-base)', 'var(--cf-bronze)', 'var(--cf-silver)', 'var(--cf-gold)'];
+
+  function setBaseGoal(n) {
+    n = clampGoal(n);
+    const t = todayKey();
+    const existing = state.base.find(e => e.from === t);
+    if (existing) existing.goal = n;
+    else { state.base.push({ from: t, goal: n }); state.base.sort((a, b) => (a.from < b.from ? -1 : 1)); }
+    persist();
+    $('baseInput').value = String(n);
+    renderAll();
+  }
+
+  /* ---------- photos (IndexedDB) ---------- */
+  const DB_NAME = 'brim-photos', STORE = 'photos';
+  let dbPromise = null;
+  let persistOK = true;
+  const photos = new Map(); // key -> { full, thumb, fullUrl, thumbUrl }
+
+  function openDB() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      try {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      } catch (e) { reject(e); }
+    });
+    return dbPromise;
+  }
+  async function dbPut(key, value) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = tx.onabort = () => reject(tx.error);
+    });
+  }
+  async function dbDelete(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = tx.onabort = () => reject(tx.error);
+    });
+  }
+  function setPhotoCache(key, rec) {
+    const old = photos.get(key);
+    if (old) { URL.revokeObjectURL(old.fullUrl); URL.revokeObjectURL(old.thumbUrl); }
+    photos.set(key, {
+      full: rec.full, thumb: rec.thumb,
+      fullUrl: URL.createObjectURL(rec.full), thumbUrl: URL.createObjectURL(rec.thumb)
+    });
+  }
+  async function loadPhotos() {
+    try {
+      const db = await openDB();
+      const [keys, vals] = await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const s = tx.objectStore(STORE);
+        const rk = s.getAllKeys(), rv = s.getAll();
+        tx.oncomplete = () => resolve([rk.result, rv.result]);
+        tx.onerror = () => reject(tx.error);
+      });
+      keys.forEach((k, i) => { if (vals[i] && vals[i].full && vals[i].thumb) setPhotoCache(k, vals[i]); });
+    } catch (e) { persistOK = false; }
+    $('persistNote').hidden = persistOK;
+    renderAll();
+  }
+
+  function loadImg(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+      img.src = url;
+    });
+  }
+  function toBlob(src, max, quality) {
+    const w0 = src.naturalWidth || src.width, h0 = src.naturalHeight || src.height;
+    const scale = Math.min(1, max / Math.max(w0, h0));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w0 * scale));
+    c.height = Math.max(1, Math.round(h0 * scale));
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return new Promise((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error('blob')), 'image/jpeg', quality));
+  }
+  async function makeBlobs(file) {
+    let src;
+    try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+    catch (e) { src = await loadImg(file); }
+    const full = await toBlob(src, 1080, 0.84);
+    const thumb = await toBlob(src, 240, 0.8);
+    if (src.close) src.close();
+    return { full, thumb };
+  }
+
+  /* ---------- ui state ---------- */
+  let viewKey = todayKey();
+  let lastToday = viewKey;
+  let view = 'steps';
+  let lastRank = 0;
+  let shown = 0, countTarget = -1, tweenId = 0;
+  let toastTimer = 0, armTimer = 0, removeArmed = false;
+  let delArmTimer = 0, delArmed = false;
+
+  const stage = $('stage'), hero = $('hero'), countEl = $('count');
+
+  /* ---------- the water sphere ---------- */
+  const R_ORB = 94;
+  const SURF = $('surface'), RIM = $('surfaceRim'), RIPS = [$('rip1'), $('rip2')];
+  const levelEls = ['waterBody', 'waterDepth', 'bodyClipRect'].map(id => $(id));
+  const sloshG = $('slosh'), burstG = $('burst');
+  let levelNow = 194, levelTarget = 194, levelTween = 0, levelDone = null, levelMoving = false, burstTimer = 0;
+  let sphereRaf = 0, sphereT0 = 0, tAcc = 0;
+  let angA = 0, angV = 0, tiltB = 0, tiltV = 0, energy = 0, tapDir = 1;
+  // the ball is never completely full: the goal fills it to about 98% so the surface keeps moving
+  const fillOf = pct => { pct = Math.max(0, Math.min(1, pct)); return pct <= 0.5 ? pct : 0.5 + (pct - 0.5) * 0.96; };
+  const levelOf = pct => 194 - fillOf(pct) * 188;
+
+  function kick(amount) {
+    if (reduced) return;
+    angV += amount;
+    tiltV += amount * 0.02;
+    energy = Math.min(1, energy + Math.abs(amount) / 120);
+  }
+
+  function surfacePath(cx, cy, rx, ry, t, A) {
+    const N = 60;
+    let d = '';
+    for (let i = 0; i < N; i++) {
+      const a = i / N * Math.PI * 2;
+      const x = cx + rx * Math.cos(a);
+      const w = A * (Math.sin(x * 0.075 + t * 2.1) + 0.6 * Math.sin(x * 0.13 - t * 2.9 + 1.1));
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + (cy + ry * Math.sin(a) + w).toFixed(1);
+    }
+    return d + 'Z';
+  }
+
+  function paintSphere() {
+    const y = levelNow, d0 = y - 100;
+    const half = Math.sqrt(Math.max(0, R_ORB * R_ORB - d0 * d0));
+    const live = !reduced, t = tAcc;
+    const idle = live ? 2.6 * Math.sin(t * 0.9) + 1.5 * Math.sin(t * 1.63 + 1.3) + 0.8 * Math.sin(t * 2.71 + 0.4) : 0;
+    const tf = live ? 1 + 0.26 * Math.sin(t * 1.15 + 0.6) + 0.1 * Math.sin(t * 2.2) + tiltB : 1;
+    const ry = half * 0.2 * Math.max(0.3, tf);
+    const A = live ? 0.55 + 2.6 * energy : 0;
+    const bodyY = (y - Math.min(3, ry)).toFixed(2);
+    levelEls.forEach(r => r.setAttribute('y', bodyY));
+    sloshG.setAttribute('transform', `rotate(${(idle + angA).toFixed(3)} 100 100)`);
+    const dpath = surfacePath(100, y, half, ry, t, A);
+    SURF.setAttribute('d', dpath);
+    RIM.setAttribute('d', dpath);
+    RIPS.forEach(e => {
+      e.setAttribute('cy', y.toFixed(2));
+      e.setAttribute('rx', (half * 0.96).toFixed(2));
+      e.setAttribute('ry', ry.toFixed(2));
+    });
+  }
+  function paintLevel(y) { levelNow = y; if (reduced || !sphereRaf) paintSphere(); }
+
+  function sphereFrame(now) {
+    sphereRaf = requestAnimationFrame(sphereFrame);
+    const dt = Math.min(0.05, Math.max(0, (now - sphereT0) / 1000));
+    sphereT0 = now;
+    tAcc += dt;
+    angV += (-55 * angA - 2.4 * angV) * dt; angA += angV * dt;
+    tiltV += (-80 * tiltB - 3.2 * tiltV) * dt; tiltB += tiltV * dt;
+    energy *= Math.exp(-0.9 * dt);
+    paintSphere();
+  }
+  function sphereRun(on) {
+    if (reduced) { paintSphere(); return; }
+    if (on && !sphereRaf) { sphereT0 = performance.now(); sphereRaf = requestAnimationFrame(sphereFrame); }
+    else if (!on && sphereRaf) { cancelAnimationFrame(sphereRaf); sphereRaf = 0; }
+  }
+
+  (function makeBubbles() {
+    let h = '';
+    for (let i = 0; i < 9; i++) {
+      const x = 28 + Math.random() * 144, r = 1.1 + Math.random() * 2.5;
+      const dur = 4.5 + Math.random() * 4, delay = Math.random() * 7;
+      h += `<circle class="bubble" cx="${x.toFixed(1)}" cy="204" r="${r.toFixed(1)}" style="animation-duration:${dur.toFixed(1)}s;animation-delay:-${delay.toFixed(1)}s"/>`;
+    }
+    for (let i = 0; i < 7; i++) {
+      const x = 22 + Math.random() * 156, y = 112 + Math.random() * 84;
+      const dur = 2.8 + Math.random() * 2.4, delay = Math.random() * 5;
+      h += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path class="glint" d="M0 -4.5 L1.2 -1.2 L4.5 0 L1.2 1.2 L0 4.5 L-1.2 1.2 L-4.5 0 L-1.2 -1.2Z" style="animation-duration:${dur.toFixed(1)}s;animation-delay:-${delay.toFixed(1)}s"/></g>`;
+    }
+    $('bubbles').innerHTML = h;
+  })();
+
+  function setLevel(target) {
+    if (Math.abs(target - levelTarget) < 0.01) return;
+    levelTarget = target;
+    cancelAnimationFrame(levelTween);
+    levelMoving = false;
+    if (reduced) { paintLevel(target); return; }
+    const from = levelNow, t0 = performance.now();
+    const dur = 500 + Math.min(1300, Math.abs(target - from) * 12);
+    levelMoving = true;
+    if (Math.abs(target - from) > 3) kick(target < from ? 38 : -38);
+    const step = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      paintLevel(from + (target - from) * e);
+      if (p < 1) { levelTween = requestAnimationFrame(step); return; }
+      levelMoving = false;
+      if (Math.abs(target - from) > 3) kick(target < from ? -34 : 34);
+      const f = levelDone; levelDone = null;
+      if (f) f();
+    };
+    levelTween = requestAnimationFrame(step);
+  }
+  hero.addEventListener('click', () => { tapDir = -tapDir; kick(55 * tapDir); });
+
+  function retrigger(el) { el.classList.remove('go'); void hero.offsetWidth; el.classList.add('go'); }
+  function burst() {
+    if (reduced) return;
+    let h = '';
+    for (let i = 0; i < 18; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sx = 100 + Math.cos(a) * 88, sy = 100 + Math.sin(a) * 88;
+      const dist = 26 + Math.random() * 54;
+      const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist - 12;
+      const r = 2 + Math.random() * 3.2;
+      const fill = i % 3 === 0 ? '#fff' : i % 3 === 1 ? 'var(--dia-l)' : 'var(--dia-d)';
+      const delay = (Math.random() * 0.15).toFixed(2);
+      h += `<g transform="translate(${sx.toFixed(1)} ${sy.toFixed(1)})"><circle class="drop" r="${r.toFixed(1)}" style="fill:${fill};--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;animation-delay:${delay}s"/></g>`;
+    }
+    burstG.innerHTML = h;
+    clearTimeout(burstTimer);
+    burstTimer = setTimeout(() => { burstG.innerHTML = ''; }, 1500);
+  }
+  function celebrateFx(big) {
+    const go = () => {
+      hero.classList.remove('pop'); void hero.offsetWidth; hero.classList.add('pop');
+      kick(big ? 110 : 45);
+      if (big && !reduced) { burst(); retrigger($('ring')); retrigger($('sweep')); }
+    };
+    if (levelMoving && !reduced) levelDone = go; else go();
+  }
+  paintLevel(194);
+  sphereRun(true);
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function setCount(target) {
+    if (target === countTarget) return;
+    countTarget = target;
+    cancelAnimationFrame(tweenId);
+    if (reduced) { shown = target; countEl.textContent = nf.format(target); return; }
+    const from = shown, t0 = performance.now(), dur = 800;
+    const step = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      shown = Math.round(from + (target - from) * e);
+      countEl.textContent = nf.format(shown);
+      if (p < 1) tweenId = requestAnimationFrame(step);
+    };
+    tweenId = requestAnimationFrame(step);
+  }
+
+  function statusText(k, steps, goal) {
+    const isToday = k === todayKey();
+    if (steps >= goal) {
+      const over = steps - goal;
+      return over > 0 ? `Goal reached, ${nf.format(over)} over. +100 points.` : 'Goal reached. +100 points.';
+    }
+    if (k > todayKey()) return 'This day is still ahead.';
+    if (!steps) return isToday ? 'Nothing logged yet. Add your steps below.' : 'No steps logged for this day.';
+    if (!isToday) return `Finished at ${Math.round(steps / goal * 100)}% of the goal.`;
+    return `${nf.format(goal - steps)} steps to go.`;
+  }
+
+  /* ---------- calendar widget ---------- */
+  const CHEV_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+  const CHEV_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+
+  function makeCalendar(root, { cls, allowFuture, decorate, onPick }) {
+    root.classList.add('cal', cls);
+    let ms = new Date(); ms = new Date(ms.getFullYear(), ms.getMonth(), 1);
+
+    const mkBtn = (label, svg) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'icon-btn'; b.setAttribute('aria-label', label); b.innerHTML = svg;
+      return b;
+    };
+    const prev = mkBtn('Previous month', CHEV_L), next = mkBtn('Next month', CHEV_R);
+    const title = document.createElement('div');
+    title.className = 'cal-title'; title.setAttribute('aria-live', 'polite');
+    const head = document.createElement('div');
+    head.className = 'cal-head'; head.append(prev, title, next);
+    const week = document.createElement('div');
+    week.className = 'cal-week'; week.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 7; i++) {
+      const s = document.createElement('span');
+      s.textContent = new Date(2024, 0, 7 + i).toLocaleDateString(undefined, { weekday: 'narrow' });
+      week.appendChild(s);
+    }
+    const grid = document.createElement('div');
+    grid.className = 'cal-grid';
+    root.append(head, week, grid);
+
+    function render() {
+      const y = ms.getFullYear(), m = ms.getMonth();
+      title.textContent = ms.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      const lead = ms.getDay(), dim = new Date(y, m + 1, 0).getDate(), today = todayKey();
+      const cells = [];
+      for (let i = 0; i < lead; i++) cells.push(document.createElement('span'));
+      for (let d = 1; d <= dim; d++) {
+        const k = keyOf(new Date(y, m, d));
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'cal-day'; b.dataset.k = k;
+        const n = document.createElement('span');
+        n.className = 'num'; n.textContent = String(d);
+        b.appendChild(n);
+        if (!allowFuture && k > today) b.disabled = true;
+        decorate(b, k);
+        cells.push(b);
+      }
+      grid.replaceChildren(...cells);
+      const t = new Date();
+      next.disabled = !allowFuture && (y > t.getFullYear() || (y === t.getFullYear() && m >= t.getMonth()));
+    }
+    const shiftMonth = n => { ms = new Date(ms.getFullYear(), ms.getMonth() + n, 1); render(); };
+    prev.addEventListener('click', () => shiftMonth(-1));
+    next.addEventListener('click', () => shiftMonth(1));
+    grid.addEventListener('click', e => {
+      const b = e.target.closest('button.cal-day');
+      if (b && !b.disabled) onPick(b.dataset.k);
+    });
+    return {
+      render,
+      setMonthOf(k) { const d = parseKey(k); ms = new Date(d.getFullYear(), d.getMonth(), 1); },
+      showMonthOf(k) { this.setMonthOf(k); render(); }
+    };
+  }
+
+  function decorateMain(b, k) {
+    const steps = stepsOf(k), goal = goalOf(k), rank = rankOf(steps, goal), pct = Math.min(1, steps / goal);
+    const hasPhoto = photos.has(k);
+    if (steps > 0) {
+      b.classList.add('has-steps');
+      b.style.setProperty('--ring', RING[rank]);
+      b.style.setProperty('--fill', (pct * 100) + '%');
+      b.style.setProperty('--cf', CF[rank]);
+    }
+    if (hasPhoto) b.classList.add('has-photo');
+    if (k === todayKey()) b.classList.add('is-today');
+    if (k === viewKey) { b.classList.add('sel'); b.setAttribute('aria-pressed', 'true'); }
+    b.setAttribute('aria-label', fmtLong(k) + (steps ? `, ${nf.format(steps)} steps` : '') + (hasPhoto ? ', has a photo' : ''));
+  }
+
+  const mainCal = makeCalendar($('mainCal'), {
+    cls: 'main', allowFuture: false, decorate: decorateMain,
+    onPick: k => { viewKey = k; renderAll(); }
+  });
+
+  /* ---------- goal editor state ---------- */
+  let edit = { id: null, start: todayKey(), end: todayKey(), goal: DEFAULT_GOAL, picking: false };
+
+  function decorateEdit(b, k) {
+    const inRange = k >= edit.start && k <= edit.end;
+    if (inRange) b.classList.add('in-range');
+    if (k === edit.start) b.classList.add('range-start');
+    if (k === edit.end) b.classList.add('range-end');
+    const o = overrideFor(k);
+    if (o && o.id !== edit.id) b.classList.add('has-ovr');
+    b.setAttribute('aria-pressed', inRange ? 'true' : 'false');
+    b.setAttribute('aria-label', fmtFull(k) + (inRange ? ', selected' : '') + (o && o.id !== edit.id ? ', has a goal of ' + nf.format(o.goal) : ''));
+  }
+
+  const editCal = makeCalendar($('editCal'), {
+    cls: 'pick', allowFuture: true, decorate: decorateEdit,
+    onPick: k => {
+      if (!edit.picking) { edit.start = edit.end = k; edit.picking = true; }
+      else {
+        if (k < edit.start) { edit.end = edit.start; edit.start = k; } else edit.end = k;
+        edit.picking = false;
+      }
+      renderEditor();
+    }
+  });
+
+  function renderEditor() {
+    editCal.render();
+    const n = daysBetween(edit.start, edit.end) + 1;
+    $('editSel').textContent = n === 1 ? fmtLong(edit.start) + (parseKey(edit.start).getFullYear() !== new Date().getFullYear() ? ', ' + parseKey(edit.start).getFullYear() : '')
+      : `${fmtRange(edit.start, edit.end)} (${n} days)`;
+    $('editHint').textContent = edit.picking
+      ? 'Now tap the last day of the period, or save for a single day.'
+      : 'Tap a day, then tap a second day to choose a period. If periods overlap, the one you added last wins.';
+    $('editGoal').value = String(edit.goal);
+    $('delOvr').hidden = !edit.id;
+    clearTimeout(delArmTimer); delArmed = false; $('delOvr').textContent = 'Delete';
+  }
+
+  function renderOvrList() {
+    const list = [...state.overrides].sort((a, b) => (a.start < b.start ? 1 : -1));
+    $('ovrEmpty').hidden = list.length > 0;
+    $('ovrList').replaceChildren(...list.map(o => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ovr'; b.dataset.id = o.id;
+      const n = daysBetween(o.start, o.end) + 1;
+      b.setAttribute('aria-label', `${fmtRange(o.start, o.end)}, goal ${nf.format(o.goal)} steps. Edit`);
+      const main = document.createElement('span'); main.className = 'o-main';
+      const s1 = document.createElement('strong'); s1.textContent = fmtRange(o.start, o.end);
+      const s2 = document.createElement('small'); s2.textContent = n === 1 ? '1 day' : n + ' days';
+      main.append(s1, s2);
+      const g = document.createElement('span'); g.className = 'o-goal'; g.textContent = nf.format(o.goal);
+      b.append(main, g);
+      li.appendChild(b);
+      return li;
+    }));
+  }
+
+  /* ---------- render ---------- */
+  function renderNav() {
+    $('dayMain').textContent = fmtLong(viewKey);
+    $('daySub').textContent = relLabel(viewKey);
+    $('nextDay').disabled = viewKey >= todayKey();
+  }
+
+  function renderHero(celebrate) {
+    const k = viewKey, steps = stepsOf(k), goal = goalOf(k);
+    const rank = rankOf(steps, goal);
+    const pct = Math.min(1, steps / goal);
+
+    hero.setAttribute('aria-label', `${nf.format(steps)} of ${nf.format(goal)} steps.` + (rank === 3 ? ' Goal reached.' : ''));
+    $('ofGoal').textContent = 'of ' + nf.format(goal);
+    $('status').textContent = statusText(k, steps, goal);
+
+    setLevel(levelOf(pct));
+    hero.classList.toggle('done', pct >= 1);
+    setCount(steps);
+
+    const prev = lastRank;
+    lastRank = rank;
+    if (celebrate && rank === 3 && prev < 3) celebrateFx(true);
+  }
+  hero.addEventListener('animationend', e => { if (e.target === hero) hero.classList.remove('pop'); });
+
+  function renderLog() {
+    const k = viewKey, isToday = k === todayKey();
+    $('logLabel').textContent = isToday ? 'Steps today' : 'Steps for ' + fmtShort(k);
+    const s = stepsOf(k);
+    $('stepsInput').value = s > 0 ? String(s) : '';
+    $('stepsErr').hidden = true;
+    const future = k > todayKey();
+    $('stepsInput').disabled = future;
+    $('saveSteps').disabled = future;
+  }
+
+  function renderPhoto() {
+    const k = viewKey, ph = photos.get(k), has = !!ph;
+    $('photoDay').textContent = fmtLong(k);
+    $('photoImg').hidden = !has;
+    $('addBtn').hidden = has;
+    $('photoActions').hidden = !has;
+    $('frame').classList.toggle('has', has);
+    if (has) {
+      $('photoImg').src = ph.fullUrl;
+      $('photoImg').alt = 'Progress photo for ' + fmtLong(k);
+    }
+    $('addLabel').textContent = k === todayKey() ? "Add today's photo" : 'Add a photo for ' + fmtShort(k);
+    clearTimeout(armTimer);
+    removeArmed = false;
+    $('removeBtn').textContent = 'Remove photo';
+  }
+
+  function renderPhotoStrip() {
+    const list = [...photos.keys()].sort().reverse();
+    $('photoStripSec').hidden = list.length < 2;
+    $('photoStrip').replaceChildren(...list.map(k => {
+      const steps = stepsOf(k), rank = rankOf(steps, goalOf(k));
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hday' + (k === viewKey ? ' on' : '');
+      b.dataset.k = k;
+      b.setAttribute('aria-label', 'Photo from ' + fmtShort(k));
+      if (k === viewKey) b.setAttribute('aria-current', 'date');
+      const thumb = document.createElement('span');
+      thumb.className = 'thumb';
+      thumb.style.setProperty('--ring', steps > 0 ? RING[rank] : 'var(--line)');
+      const img = new Image();
+      img.src = photos.get(k).thumbUrl; img.alt = ''; img.decoding = 'async';
+      thumb.appendChild(img);
+      const hd = document.createElement('span'); hd.className = 'hd'; hd.textContent = fmtShort(k);
+      b.append(thumb, hd);
+      li.appendChild(b);
+      return li;
+    }));
+  }
+
+  function renderCompare() {
+    const keys = [...photos.keys()].sort();
+    if (keys.length < 2) { $('cmpSec').hidden = true; return; }
+    const a = keys[0], b = keys[keys.length - 1];
+    $('cmpSec').hidden = false;
+    $('cmpA').src = photos.get(a).fullUrl;
+    $('cmpB').src = photos.get(b).fullUrl;
+    $('cmpCapA').textContent = fmtFull(a);
+    $('cmpCapB').textContent = fmtFull(b);
+    const n = daysBetween(a, b);
+    $('cmpSub').textContent = `${n} ${n === 1 ? 'day' : 'days'} apart.`;
+  }
+
+  function renderDayCard() {
+    const k = viewKey, steps = stepsOf(k), goal = goalOf(k), o = overrideFor(k), ph = photos.get(k);
+    $('dcDate').textContent = fmtLong(k) + ', ' + relLabel(k).toLowerCase();
+    $('dcSteps').textContent = steps > 0 ? nf.format(steps) + ' steps' : 'No steps logged';
+    $('dcGoal').textContent = `Goal ${nf.format(goal)}` + (o ? ' (special goal)' : '') + (steps > 0 ? `, ${Math.round(steps / goal * 100)}% done` : '');
+    const th = $('dcThumb');
+    th.classList.toggle('has', !!ph);
+    if (ph) {
+      const img = new Image();
+      img.src = ph.thumbUrl; img.alt = 'Photo for ' + fmtLong(k);
+      th.replaceChildren(img);
+    } else {
+      th.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="No photo"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2a1 1 0 0 0 .8-.4l.9-1.2a1 1 0 0 1 .8-.4h3.6a1 1 0 0 1 .8.4l.9 1.2a1 1 0 0 0 .8.4h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.4"/></svg>';
+    }
+    const ws = workoutSummary(k);
+    $('dcWork').textContent = ws ? 'Workout: ' + ws : '';
+    $('dcEdit').disabled = k > todayKey();
+  }
+
+  function renderAll() {
+    renderNav(); renderHero(false); renderLog(); renderPhoto(); renderPhotoStrip(); renderCompare();
+    mainCal.render(); renderDayCard(); renderWork(); renderStats(); renderRewards();
+  }
+
+  function goTo(k) {
+    viewKey = k;
+    mainCal.setMonthOf(k);
+    renderAll();
+  }
+
+  /* ---------- workouts ---------- */
+  const CATALOG = [
+    { id: 'cardio', name: 'Cardio', ex: ['Incline Treadmill', 'Treadmill', 'Run', 'Walk'] },
+    { id: 'legs', name: 'Legs', ex: ['Squat', 'Lunges', 'Leg Extension', 'Leg Curl', 'Leg Press', 'Hip Abduction', 'Hip Adduction', 'Calf Raises'] },
+    { id: 'chest', name: 'Chest', ex: ['Flat Dumbbell Press', 'Incline Dumbbell Press', 'Flat Barbell Press', 'Incline Barbell Press', 'Dips', 'Pec Fly'] },
+    { id: 'back', name: 'Back', ex: ['Pull Ups', 'Lat Pulldown', 'T-Bar Rows', 'Cable Rows', 'Face Pulls'] },
+    { id: 'arms', name: 'Arms', ex: ['Bicep Curls', 'Tricep Pushdowns', 'Tricep Extensions'] },
+    { id: 'aux', name: 'Auxiliary', ex: ['Cable Crunches', 'Crunches', 'Shoulder Flies', 'Shoulder Press'] }
+  ];
+  const KG_PER_LB = 0.45359237, KM_PER_MI = 1.609344;
+  const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const catById = id => CATALOG.find(c => c.id === id);
+  const exKey = (cat, name) => cat + '|' + name;
+  const exCat = key => key.slice(0, key.indexOf('|'));
+  const exName = key => key.slice(key.indexOf('|') + 1);
+  const isCardioKey = key => key.startsWith('cardio|');
+  const exercisesOf = id => { const c = catById(id); return c ? [...c.ex, ...(state.customEx[id] || [])] : []; };
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const kgToDisp = kg => state.units.w === 'lb' ? kg / KG_PER_LB : kg;
+  const dispToKg = v => state.units.w === 'lb' ? v * KG_PER_LB : v;
+  const kmToDisp = km => state.units.d === 'mi' ? km / KM_PER_MI : km;
+  const dispToKm = v => state.units.d === 'mi' ? v * KM_PER_MI : v;
+  const fmtNum = (n, dp = 1) => nf.format(parseFloat(n.toFixed(dp)));
+  const plain = (n, dp = 1) => String(parseFloat(n.toFixed(dp)));
+  const fmtWeight = kg => kg > 0.0001 ? `${fmtNum(kgToDisp(kg))} ${state.units.w}` : 'Bodyweight';
+  const fmtDist = km => `${fmtNum(kmToDisp(km), 2)} ${state.units.d}`;
+  function fmtDur(total) {
+    total = Math.round(total);
+    const h = Math.floor(total / 3600), m = Math.floor(total % 3600 / 60), s = total % 60;
+    if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
+    return s ? `${m}:${pad(s)} min` : `${m} min`;
+  }
+  function fmtPace(sec, km) {
+    let per = Math.round(sec / kmToDisp(km));
+    return `${Math.floor(per / 60)}:${pad(per % 60)} /${state.units.d}`;
+  }
+  function describe(e) {
+    if (isCardioKey(e.ex)) {
+      const parts = [];
+      if (e.sec > 0) parts.push(fmtDur(e.sec));
+      if (e.km > 0) parts.push(fmtDist(e.km));
+      if (e.sec > 0 && e.km > 0) parts.push(fmtPace(e.sec, e.km));
+      return parts.join(', ');
+    }
+    return `${fmtWeight(e.kg || 0)} × ${e.reps}`;
+  }
+  function groupByEx(list) {
+    const m = new Map();
+    list.forEach(e => { if (!m.has(e.ex)) m.set(e.ex, []); m.get(e.ex).push(e); });
+    return m;
+  }
+  function workoutSummary(k) {
+    const list = state.workouts[k] || [];
+    if (!list.length) return '';
+    const ex = new Set(list.map(e => e.ex)).size;
+    const sets = list.filter(e => !isCardioKey(e.ex)).length;
+    const cardio = list.length - sets;
+    const parts = [`${ex} ${ex === 1 ? 'exercise' : 'exercises'}`];
+    if (sets) parts.push(`${sets} ${sets === 1 ? 'set' : 'sets'}`);
+    if (cardio) parts.push(`${cardio} cardio ${cardio === 1 ? 'session' : 'sessions'}`);
+    return parts.join(', ');
+  }
+  function lastEntryFor(key) {
+    const days = Object.keys(state.workouts).sort().reverse();
+    for (const d of days) {
+      const arr = state.workouts[d];
+      for (let i = arr.length - 1; i >= 0; i--) if (arr[i].ex === key) return arr[i];
+    }
+    return null;
+  }
+  function deleteEntry(day, id) {
+    const arr = (state.workouts[day] || []).filter(e => e.id !== id);
+    if (arr.length) state.workouts[day] = arr; else delete state.workouts[day];
+    persist();
+    renderAll();
+    if (sheetIsOpen() && sheetPage === 'log') renderLogged();
+    toast('Removed');
+  }
+
+  function renderWork() {
+    const k = viewKey, list = state.workouts[k] || [];
+    const sum = workoutSummary(k);
+    $('workDay').textContent = fmtLong(k) + (sum ? ` (${sum})` : '');
+    $('addWorkout').disabled = k > todayKey();
+    const groups = groupByEx(list);
+    $('workEmpty').hidden = groups.size > 0;
+    $('workEmpty').textContent = k > todayKey() ? 'This day is still ahead.' : 'Nothing logged for this day yet. Tap + to add a workout.';
+    const nodes = [];
+    groups.forEach((entries, key) => {
+      const cardio = isCardioKey(key);
+      const g = document.createElement('div');
+      g.className = 'xgroup';
+      const head = document.createElement('div');
+      head.className = 'xhead';
+      const nm = document.createElement('span'); nm.className = 'xname'; nm.textContent = exName(key);
+      const ct = document.createElement('span'); ct.className = 'xcat'; ct.textContent = (catById(exCat(key)) || { name: exCat(key) }).name;
+      head.append(nm, ct);
+      g.appendChild(head);
+      entries.forEach((e, i) => {
+        const row = document.createElement('div'); row.className = 'xset';
+        const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = (cardio ? 'Session ' : 'Set ') + (i + 1);
+        const sv = document.createElement('span'); sv.className = 'sv'; sv.textContent = describe(e);
+        const sx = document.createElement('button');
+        sx.type = 'button'; sx.className = 'sx'; sx.dataset.id = e.id;
+        sx.setAttribute('aria-label', `Delete ${cardio ? 'session' : 'set'} ${i + 1} of ${exName(key)}`);
+        sx.innerHTML = ICON_X;
+        row.append(sn, sv, sx);
+        g.appendChild(row);
+      });
+      const add = document.createElement('button');
+      add.type = 'button'; add.className = 'btn ghost xadd'; add.dataset.ex = key;
+      add.textContent = cardio ? 'Add session' : 'Add set';
+      add.disabled = k > todayKey();
+      g.appendChild(add);
+      nodes.push(g);
+    });
+    $('workList').replaceChildren(...nodes);
+  }
+  $('workList').addEventListener('click', e => {
+    const x = e.target.closest('button.sx');
+    if (x) { deleteEntry(viewKey, x.dataset.id); return; }
+    const a = e.target.closest('button.xadd');
+    if (a) openLog(a.dataset.ex, a);
+  });
+
+  /* ---------- stats ---------- */
+  function computeStats() {
+    const by = new Map();
+    let sets = 0, cardio = 0;
+    const days = new Set();
+    Object.keys(state.workouts).sort().forEach(day => {
+      state.workouts[day].forEach(e => {
+        days.add(day);
+        let s = by.get(e.ex);
+        if (!s) { s = { count: 0, best: null, longKm: null, longSec: null, totKm: 0, totSec: 0 }; by.set(e.ex, s); }
+        s.count++;
+        if (isCardioKey(e.ex)) {
+          cardio++;
+          s.totKm += e.km || 0; s.totSec += e.sec || 0;
+          if ((e.km || 0) > 0 && (!s.longKm || e.km > s.longKm.v + 1e-9)) s.longKm = { v: e.km, day };
+          if ((e.sec || 0) > 0 && (!s.longSec || e.sec > s.longSec.v)) s.longSec = { v: e.sec, day };
+        } else {
+          sets++;
+          const kg = e.kg || 0, b = s.best;
+          if (!b || kg > b.kg + 1e-9 || (Math.abs(kg - b.kg) <= 1e-9 && e.reps > b.reps)) s.best = { kg, reps: e.reps, day };
+        }
+      });
+    });
+    return { by, sets, cardio, days: days.size };
+  }
+
+  function renderStats() {
+    const { by, sets, cardio, days } = computeStats();
+    $('statEmpty').hidden = by.size > 0;
+    const parts = [];
+    if (sets) parts.push(`${nf.format(sets)} ${sets === 1 ? 'set' : 'sets'}`);
+    if (cardio) parts.push(`${nf.format(cardio)} cardio ${cardio === 1 ? 'session' : 'sessions'}`);
+    $('statSum').textContent = by.size ? `${parts.join(' and ')} across ${days} ${days === 1 ? 'day' : 'days'}.` : '';
+
+    const catIds = CATALOG.map(c => c.id);
+    by.forEach((s, key) => { const c = exCat(key); if (!catIds.includes(c)) catIds.push(c); });
+    const out = [];
+    catIds.forEach(cid => {
+      const keys = [...by.keys()].filter(k => exCat(k) === cid);
+      if (!keys.length) return;
+      const order = exercisesOf(cid).map(n => exKey(cid, n));
+      keys.sort((a, b) => {
+        const ia = order.indexOf(a), ib = order.indexOf(b);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b);
+      });
+      const sec = document.createElement('div');
+      sec.className = 'st-cat';
+      const h = document.createElement('h3');
+      h.textContent = (catById(cid) || { name: cid }).name;
+      sec.appendChild(h);
+      keys.forEach(key => {
+        const s = by.get(key), cardioRow = isCardioKey(key);
+        const row = document.createElement('div'); row.className = 'st-row';
+        const left = document.createElement('div');
+        const nm = document.createElement('div'); nm.className = 'st-name'; nm.textContent = exName(key);
+        left.appendChild(nm);
+        const line = t => { const d = document.createElement('div'); d.className = 'st-line'; d.textContent = t; left.appendChild(d); };
+        if (cardioRow) {
+          if (s.longKm) line(`Longest distance ${fmtDist(s.longKm.v)} on ${fmtFull(s.longKm.day)}`);
+          if (s.longSec) line(`Longest time ${fmtDur(s.longSec.v)} on ${fmtFull(s.longSec.day)}`);
+          if (s.totKm > 0) line(`Total distance ${fmtDist(s.totKm)}`);
+        } else if (s.best) {
+          line(`Best ${fmtWeight(s.best.kg)} × ${s.best.reps} on ${fmtFull(s.best.day)}`);
+        }
+        const right = document.createElement('div'); right.className = 'st-count';
+        const num = document.createElement('strong'); num.textContent = nf.format(s.count);
+        const lab = document.createElement('span');
+        lab.textContent = cardioRow ? (s.count === 1 ? 'session' : 'sessions') : (s.count === 1 ? 'set' : 'sets');
+        right.append(num, lab);
+        row.append(left, right);
+        sec.appendChild(row);
+      });
+      out.push(sec);
+    });
+    $('statList').replaceChildren(...out);
+  }
+
+  /* ---------- add-workout sheet ---------- */
+  const sheet = $('sheet'), sheetScrim = $('sheetScrim');
+  let sheetPage = 'cat', sheetCat = null, sheetEx = null, sheetOpener = null;
+  const sheetIsOpen = () => sheet.classList.contains('open');
+  function setInert(on) {
+    $('app').inert = on; $('tabbar').inert = on;
+    document.body.style.overflow = on ? 'hidden' : '';
+  }
+  function showSheetPage(name, title) {
+    sheetPage = name;
+    ['cat', 'ex', 'log'].forEach(n => { $('sp-' + n).hidden = n !== name; });
+    $('sheetTitle').textContent = title;
+    $('sheetBack').hidden = name === 'cat';
+    $('sheetBody').scrollTop = 0;
+  }
+  function openSheet(opener) {
+    if (!sheetIsOpen()) {
+      sheetOpener = opener || document.activeElement;
+      sheet.classList.add('open');
+      sheetScrim.classList.add('show');
+      setInert(true);
+    }
+    requestAnimationFrame(() => $('sheetTitle').focus());
+  }
+  function closeSheet() {
+    sheet.classList.remove('open');
+    sheetScrim.classList.remove('show');
+    setInert(false);
+    const o = (sheetOpener && document.contains(sheetOpener)) ? sheetOpener : $('addWorkout');
+    if (o && o.focus && !o.disabled) o.focus();
+  }
+
+  function openAdd() {
+    if (viewKey > todayKey()) return;
+    renderCatList();
+    showSheetPage('cat', 'Add a workout');
+    openSheet($('addWorkout'));
+  }
+  function renderCatList() {
+    $('catList').replaceChildren(...CATALOG.map(c => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'menu-item'; b.dataset.cat = c.id;
+      const n = exercisesOf(c.id).length;
+      b.innerHTML = '<span class="mi-text"><strong></strong><small></small></span>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+      b.querySelector('strong').textContent = c.name;
+      b.querySelector('small').textContent = `${n} ${n === 1 ? 'exercise' : 'exercises'}`;
+      li.appendChild(b);
+      return li;
+    }));
+  }
+  function renderExList() {
+    const c = catById(sheetCat);
+    const custom = state.customEx[sheetCat] || [];
+    $('exList').replaceChildren(...exercisesOf(sheetCat).map(name => {
+      const li = document.createElement('li');
+      li.className = 'exrow';
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'menu-item'; b.dataset.ex = exKey(sheetCat, name);
+      b.innerHTML = '<span class="mi-text"><strong></strong></span>' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+      b.querySelector('strong').textContent = name;
+      li.appendChild(b);
+      if (!c.ex.includes(name) && custom.includes(name)) {
+        const x = document.createElement('button');
+        x.type = 'button'; x.className = 'sx'; x.dataset.name = name;
+        x.setAttribute('aria-label', `Remove ${name} from your list`);
+        x.innerHTML = ICON_X;
+        li.appendChild(x);
+      }
+      return li;
+    }));
+  }
+  function openCategory(id) {
+    sheetCat = id;
+    renderExList();
+    $('ownName').value = '';
+    $('ownErr').hidden = true;
+    showSheetPage('ex', catById(id).name);
+  }
+  function openLog(key, opener) {
+    sheetEx = key; sheetCat = exCat(key);
+    const cardio = isCardioKey(key);
+    ['inWeight', 'inReps', 'inMin', 'inSec', 'inDist'].forEach(id => { $(id).value = ''; });
+    if (!cardio) {
+      const last = lastEntryFor(key);
+      if (last) {
+        $('inWeight').value = last.kg > 0 ? plain(kgToDisp(last.kg)) : '';
+        $('inReps').value = String(last.reps);
+      }
+    }
+    $('fieldsStrength').hidden = cardio;
+    $('fieldsCardio').hidden = !cardio;
+    $('lblW').textContent = `Weight (${state.units.w})`;
+    $('lblD').textContent = `Distance (${state.units.d})`;
+    $('addSet').textContent = cardio ? 'Add session' : 'Add set';
+    $('setErr').hidden = true;
+    $('logFor').textContent = 'Logging for ' + fmtLong(viewKey) + (viewKey === todayKey() ? ' (today)' : '');
+    renderLogged();
+    showSheetPage('log', exName(key));
+    openSheet(opener);
+  }
+  function renderLogged() {
+    const list = (state.workouts[viewKey] || []).filter(e => e.ex === sheetEx);
+    const cardio = isCardioKey(sheetEx || '');
+    $('loggedH').hidden = list.length === 0;
+    $('loggedH').textContent = viewKey === todayKey() ? 'Logged today' : 'Logged on ' + fmtShort(viewKey);
+    $('loggedList').replaceChildren(...list.map((e, i) => {
+      const row = document.createElement('div'); row.className = 'xset';
+      const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = (cardio ? 'Session ' : 'Set ') + (i + 1);
+      const sv = document.createElement('span'); sv.className = 'sv'; sv.textContent = describe(e);
+      const sx = document.createElement('button');
+      sx.type = 'button'; sx.className = 'sx'; sx.dataset.id = e.id;
+      sx.setAttribute('aria-label', `Delete ${cardio ? 'session' : 'set'} ${i + 1}`);
+      sx.innerHTML = ICON_X;
+      row.append(sn, sv, sx);
+      return row;
+    }));
+  }
+
+  const num = raw => { const t = String(raw).trim().replace(',', '.'); return t === '' ? 0 : Number(t); };
+  function addEntry() {
+    const err = $('setErr'), key = sheetEx;
+    const fail = msg => { err.textContent = msg; err.hidden = false; };
+    let entry;
+    if (isCardioKey(key)) {
+      const m = num($('inMin').value), s = num($('inSec').value), d = num($('inDist').value);
+      if (![m, s, d].every(Number.isFinite) || m < 0 || s < 0 || d < 0) return fail('Use numbers only, like 30 minutes or 3.1 distance.');
+      if (m > 999 || s > 59 || d > 9999) return fail('Seconds go up to 59 and minutes up to 999.');
+      const sec = Math.round(m * 60 + s);
+      if (sec <= 0 && d <= 0) return fail('Enter a time, a distance, or both.');
+      entry = { id: newId(), ex: key, sec: sec > 0 ? sec : 0, km: d > 0 ? dispToKm(d) : 0 };
+    } else {
+      const w = num($('inWeight').value), r = num($('inReps').value);
+      if (!Number.isFinite(w) || w < 0 || w > 5000) return fail('Enter a weight from 0 to 5000, or leave it blank for bodyweight.');
+      if (!Number.isFinite(r) || r < 1 || r > 1000 || Math.round(r) !== r) return fail('Enter the reps as a whole number, like 8.');
+      entry = { id: newId(), ex: key, kg: w > 0 ? dispToKg(w) : 0, reps: r };
+    }
+    err.hidden = true;
+    (state.workouts[viewKey] = state.workouts[viewKey] || []).push(entry);
+    persist();
+    renderAll();
+    renderLogged();
+    toast(isCardioKey(key) ? 'Session added' : 'Set added');
+  }
+
+  function addOwnExercise() {
+    const err = $('ownErr');
+    const name = $('ownName').value.replace(/\|/g, '').trim().replace(/\s+/g, ' ');
+    if (!name) { err.textContent = 'Type a name for the exercise.'; err.hidden = false; return; }
+    if (exercisesOf(sheetCat).some(n => n.toLowerCase() === name.toLowerCase())) {
+      err.textContent = 'That exercise is already in the list.'; err.hidden = false; return;
+    }
+    (state.customEx[sheetCat] = state.customEx[sheetCat] || []).push(name);
+    persist();
+    err.hidden = true;
+    openLog(exKey(sheetCat, name));
+  }
+
+  $('addWorkout').addEventListener('click', openAdd);
+  $('sheetClose').addEventListener('click', closeSheet);
+  $('sheetScrim').addEventListener('click', closeSheet);
+  $('sheetDone').addEventListener('click', closeSheet);
+  $('sheetBack').addEventListener('click', () => {
+    if (sheetPage === 'log') openCategory(sheetCat);
+    else if (sheetPage === 'ex') { renderCatList(); showSheetPage('cat', 'Add a workout'); }
+    $('sheetTitle').focus();
+  });
+  $('catList').addEventListener('click', e => {
+    const b = e.target.closest('button.menu-item');
+    if (b) { openCategory(b.dataset.cat); $('sheetTitle').focus(); }
+  });
+  $('exList').addEventListener('click', e => {
+    const x = e.target.closest('button.sx');
+    if (x) {
+      state.customEx[sheetCat] = (state.customEx[sheetCat] || []).filter(n => n !== x.dataset.name);
+      persist();
+      renderExList();
+      toast('Removed from your list');
+      return;
+    }
+    const b = e.target.closest('button.menu-item');
+    if (b) openLog(b.dataset.ex);
+  });
+  $('ownAdd').addEventListener('click', addOwnExercise);
+  $('ownName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addOwnExercise(); } });
+  $('addSet').addEventListener('click', addEntry);
+  ['inWeight', 'inReps', 'inMin', 'inSec', 'inDist'].forEach(id =>
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addEntry(); } }));
+  $('loggedList').addEventListener('click', e => {
+    const x = e.target.closest('button.sx');
+    if (x) deleteEntry(viewKey, x.dataset.id);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetIsOpen()) closeSheet(); });
+
+  /* ---------- rewards ---------- */
+  const R_TIERS = [
+    { id: 'star1', stars: 1, cost: 250, cls: 't-s1' },
+    { id: 'star2', stars: 2, cost: 500, cls: 't-s2' },
+    { id: 'star3', stars: 3, cost: 1500, cls: 't-s3' },
+    { id: 'star4', stars: 4, cost: 3000, cls: 't-s4' },
+    { id: 'star5', stars: 5, cost: 5000, cls: 't-s5' }
+  ];
+  const POINTS_PER_DAY = 100;
+  const R_LEGACY = { week: 'star2', month: 'star4', twomonth: 'star5' };
+  const rTier = id => R_TIERS.find(t => t.id === (R_LEGACY[id] || id)) || R_TIERS[0];
+  const starLabel = n => (n === 1 ? '1 star' : n + ' stars');
+  const STAR_PATH = 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z';
+  const PIN_SVG = '<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3.2V14H7v-1.8L10 9z"/><path d="M12 14v6.5"/></svg>';
+  function starsEl(n, labelled) {
+    const wrap = document.createElement('span');
+    wrap.className = 'stars';
+    if (labelled) { wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', starLabel(n)); }
+    else wrap.setAttribute('aria-hidden', 'true');
+    let h = '';
+    for (let i = 1; i <= 5; i++) h += `<svg viewBox="0 0 24 24" class="${i <= n ? 'on' : ''}"><path d="${STAR_PATH}"/></svg>`;
+    wrap.innerHTML = h;
+    return wrap;
+  }
+  const dayHit = k => { const s = stepsOf(k); return s > 0 && s >= goalOf(k); };
+  function pointsEarned() {
+    let n = 0;
+    const t = todayKey();
+    for (const k in state.days) if (k <= t && dayHit(k)) n++;
+    return n * POINTS_PER_DAY;
+  }
+  const pointsSpent = () => state.redeemed.reduce((a, r) => a + r.cost, 0);
+  const pointsBalance = () => Math.max(0, pointsEarned() - pointsSpent());
+  function currentStreak() {
+    let k = todayKey();
+    if (!dayHit(k)) k = shiftKey(k, -1);
+    let n = 0;
+    while (dayHit(k) && n < 5000) { n++; k = shiftKey(k, -1); }
+    return n;
+  }
+  const pinnedReward = () => state.rewards.find(r => r.id === state.pinned) || null;
+  let focusPin = null;
+
+  let coinShown = null, coinTarget = null, coinTween = 0;
+  function paintCoin(v) {
+    $('coin').textContent = String(v);
+    const digits = String(v).length;
+    $('coin').style.fontSize = digits <= 3 ? '30px' : digits === 4 ? '25px' : digits === 5 ? '20px' : '17px';
+  }
+  function setCoin(target) {
+    if (target === coinTarget) return;
+    coinTarget = target;
+    cancelAnimationFrame(coinTween);
+    if (coinShown === null || reduced) { coinShown = target; paintCoin(target); return; }
+    const from = coinShown, t0 = performance.now(), dur = 900;
+    const step = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      coinShown = Math.round(from + (target - from) * e);
+      paintCoin(coinShown);
+      if (p < 1) coinTween = requestAnimationFrame(step);
+    };
+    coinTween = requestAnimationFrame(step);
+  }
+
+  function renderRewards() {
+    if (state.pinned && !pinnedReward()) { state.pinned = null; persist(); }
+    const earned = pointsEarned(), spent = pointsSpent(), bal = pointsBalance();
+    const streak = currentStreak();
+    const pts = `${nf.format(bal)} ${bal === 1 ? 'point' : 'points'}`;
+
+    // rewards page header
+    setCoin(bal);
+    $('ptsMain').textContent = pts + ' to spend';
+    $('ptsSub').textContent = `${nf.format(earned)} earned, ${nf.format(spent)} spent`;
+    $('ptsStreak').textContent = streak > 0 ? `${streak}-day streak` : '';
+    let next = null;
+    state.rewards.forEach(r => {
+      const c = rTier(r.tier).cost;
+      if (c > bal && (!next || c < next.c)) next = { r, c };
+    });
+    $('ptsNext').textContent = next ? `Next up: ${next.r.name}, ${nf.format(next.c - bal)} to go.`
+      : (state.rewards.length ? 'Everything in your store is within reach.' : '');
+
+    // steps page: streak, points and the pinned reward
+    $('chipStreak').hidden = streak < 1;
+    $('chipStreakTxt').textContent = `${streak}-day streak`;
+    $('chipPtsTxt').textContent = pts;
+    const pr = pinnedReward();
+    $('saving').hidden = !pr;
+    if (pr) {
+      const t = rTier(pr.tier);
+      $('saving').className = 'saving ' + t.cls;
+      $('svName').textContent = pr.name;
+      $('svStars').replaceChildren(starsEl(t.stars, true));
+      $('svFill').style.setProperty('--p', Math.min(100, bal / t.cost * 100) + '%');
+      $('svSub').textContent = bal >= t.cost ? 'Ready to redeem. Tap to open Rewards.' : `${nf.format(bal)} of ${nf.format(t.cost)} points, ${nf.format(t.cost - bal)} to go`;
+    }
+
+    // rewards page store
+    let armedBtn = null, pinBtn = null;
+    const out = [];
+    R_TIERS.forEach(t => {
+      const sec = document.createElement('div');
+      sec.className = 'rw-tier ' + t.cls;
+      const head = document.createElement('div'); head.className = 'rw-head';
+      const h = document.createElement('h3'); h.appendChild(starsEl(t.stars, true));
+      const cost = document.createElement('span'); cost.className = 'rw-cost'; cost.textContent = `${nf.format(t.cost)} points`;
+      head.append(h, cost);
+      sec.appendChild(head);
+      const list = state.rewards.filter(r => r.tier === t.id).sort((a, b) => a.name.localeCompare(b.name));
+      if (!list.length) {
+        const pp = document.createElement('p'); pp.className = 'rw-empty'; pp.textContent = 'Nothing here yet.';
+        const add = document.createElement('button');
+        add.type = 'button'; add.className = 'btn ghost rw-add'; add.dataset.tier = t.id; add.textContent = 'Add a reward';
+        sec.append(pp, add);
+      }
+      list.forEach(r => {
+        const ready = bal >= t.cost, pinned = state.pinned === r.id;
+        const card = document.createElement('div');
+        card.className = 'rw' + (ready ? ' ready' : '');
+        const top = document.createElement('div'); top.className = 'rw-top';
+        const info = document.createElement('div'); info.className = 'rw-info';
+        const nm = document.createElement('div'); nm.className = 'rw-name'; nm.textContent = r.name;
+        info.appendChild(nm);
+        if (r.once) { const o = document.createElement('div'); o.className = 'rw-once'; o.textContent = 'One-time'; info.appendChild(o); }
+        const pin = document.createElement('button');
+        pin.type = 'button'; pin.className = 'pin'; pin.dataset.id = r.id;
+        pin.setAttribute('aria-pressed', String(pinned));
+        pin.setAttribute('aria-label', (pinned ? 'Unpin ' : 'Pin ') + r.name);
+        pin.innerHTML = PIN_SVG;
+        if (focusPin === r.id) pinBtn = pin;
+        top.append(info, pin);
+        card.appendChild(top);
+        if (pinned) {
+          const prog = document.createElement('div'); prog.className = 'rw-prog';
+          const bar = document.createElement('span'); bar.className = 'bar';
+          const fill = document.createElement('i'); fill.style.setProperty('--p', Math.min(100, bal / t.cost * 100) + '%');
+          bar.appendChild(fill);
+          const txt = document.createElement('div'); txt.className = 'txt';
+          txt.textContent = ready ? 'Ready to redeem' : `${nf.format(bal)} of ${nf.format(t.cost)} points, ${nf.format(t.cost - bal)} to go`;
+          prog.append(bar, txt);
+          card.appendChild(prog);
+        }
+        const rb = document.createElement('button');
+        rb.type = 'button'; rb.className = 'btn rw-redeem'; rb.dataset.id = r.id; rb.textContent = 'Redeem';
+        if (!ready) {
+          rb.disabled = true;
+          rb.setAttribute('aria-label', `Redeem ${r.name}, ${nf.format(t.cost - bal)} more points needed`);
+        }
+        card.appendChild(rb);
+        sec.appendChild(card);
+      });
+      out.push(sec);
+    });
+    $('rwStore').replaceChildren(...out);
+    if (armedBtn) armedBtn.focus(); else if (pinBtn) pinBtn.focus();
+    focusPin = null;
+
+    const hist = [...state.redeemed].sort((a, b) => (b.day + String(b.ts)).localeCompare(a.day + String(a.ts)));
+    $('rwHistSec').hidden = hist.length === 0;
+    $('rwHist').replaceChildren(...hist.map(r => {
+      const li = document.createElement('li');
+      const main = document.createElement('div'); main.className = 'h-main';
+      const s1 = document.createElement('strong'); s1.textContent = r.name;
+      const s2 = document.createElement('small'); s2.append(starsEl(rTier(r.tier).stars, true), document.createTextNode(fmtFull(r.day)));
+      main.append(s1, s2);
+      const c = document.createElement('span'); c.className = 'h-cost'; c.textContent = '\u2212' + nf.format(r.cost);
+      li.append(main, c);
+      return li;
+    }));
+  }
+
+  function togglePin(id) {
+    state.pinned = state.pinned === id ? null : id;
+    focusPin = id;
+    persist();
+    renderRewards();
+    toast(state.pinned ? 'Pinned. Its progress shows on your Steps page.' : 'Unpinned');
+  }
+
+  const dlg = $('dlg'), dlgScrim = $('dlgScrim');
+  let confirmCb = null, confirmOpener = null;
+  const dlgIsOpen = () => dlg.classList.contains('open');
+  function askConfirm(o) {
+    confirmCb = o.onOk;
+    confirmOpener = document.activeElement;
+    $('dlgTitle').textContent = o.title;
+    $('dlgStars').replaceChildren(...(o.stars ? [starsEl(o.stars, true)] : []));
+    $('dlgName').textContent = o.name;
+    $('dlgBody').textContent = o.body;
+    $('dlgOk').textContent = o.okLabel;
+    $('dlgOk').classList.toggle('danger-fill', !!o.danger);
+    dlg.classList.add('open');
+    dlgScrim.classList.add('show');
+    setInert(true);
+    const dr = $('drawer');
+    if (dr) dr.inert = true;
+    requestAnimationFrame(() => $('dlgCancel').focus());
+  }
+  function closeConfirm() {
+    dlg.classList.remove('open');
+    dlgScrim.classList.remove('show');
+    const dr = $('drawer');
+    const drawerOpen = !!dr && dr.classList.contains('open');
+    if (dr) dr.inert = false;
+    if (!drawerOpen && !sheetIsOpen()) setInert(false);
+    confirmCb = null;
+    const o = confirmOpener;
+    confirmOpener = null;
+    if (o && document.contains(o) && o.focus) o.focus();
+    else if (drawerOpen) $('drawerTitle').focus();
+    else { const t = document.querySelector('.tab[data-view="rewards"]'); if (t && t.focus) t.focus(); }
+  }
+  function openRedeem(id) {
+    const r = state.rewards.find(x => x.id === id);
+    if (!r) return;
+    const t = rTier(r.tier), bal = pointsBalance();
+    if (bal < t.cost) return;
+    askConfirm({
+      title: 'Redeem this reward?', stars: t.stars, name: r.name, okLabel: 'Redeem',
+      body: `This costs ${nf.format(t.cost)} points. Your balance goes from ${nf.format(bal)} to ${nf.format(bal - t.cost)}.` +
+        (r.once ? " It's a one-time reward, so it leaves your store afterwards." : ''),
+      onOk: () => performRedeem(id)
+    });
+  }
+  function performRedeem(id) {
+    const r = state.rewards.find(x => x.id === id);
+    if (!r) return;
+    const cost = rTier(r.tier).cost;
+    if (pointsBalance() < cost) return;
+    state.redeemed.push({ id: newId(), name: r.name, tier: r.tier, cost, day: todayKey(), ts: Date.now() });
+    if (r.once) {
+      state.rewards = state.rewards.filter(x => x.id !== r.id);
+      if (state.pinned === r.id) state.pinned = null;
+    }
+    persist();
+    renderRewards();
+    const f = $('coinFloat');
+    f.textContent = '\u2212' + nf.format(cost);
+    retrigger(f);
+    const coin = $('coin');
+    coin.classList.remove('pop'); void coin.offsetWidth; coin.classList.add('pop');
+    toast(`Redeemed: ${r.name}`);
+  }
+  function deleteReward(id) {
+    state.rewards = state.rewards.filter(x => x.id !== id);
+    if (state.pinned === id) state.pinned = null;
+    persist();
+    renderAll();
+    if (drawerPage === 'reward') showPage('rewards'); else renderRewardList();
+    $('drawerTitle').focus();
+    toast('Reward deleted');
+  }
+  function confirmDeleteReward(id) {
+    const r = state.rewards.find(x => x.id === id);
+    if (!r) return;
+    askConfirm({
+      title: 'Delete this reward?', stars: rTier(r.tier).stars, name: r.name, okLabel: 'Delete', danger: true,
+      body: "It leaves your store for good. Your points and past redemptions aren't affected.",
+      onOk: () => deleteReward(id)
+    });
+  }
+  $('dlgCancel').addEventListener('click', closeConfirm);
+  $('dlgScrim').addEventListener('click', closeConfirm);
+  $('dlgOk').addEventListener('click', () => { const cb = confirmCb; closeConfirm(); if (cb) cb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlgIsOpen()) closeConfirm(); });
+  $('coin').addEventListener('animationend', () => $('coin').classList.remove('pop'));
+  $('saving').addEventListener('click', () => setView('rewards'));
+  $('rwStore').addEventListener('click', e => {
+    const b = e.target.closest('button.rw-redeem');
+    if (b && !b.disabled) { openRedeem(b.dataset.id); return; }
+    const pn = e.target.closest('button.pin');
+    if (pn) { togglePin(pn.dataset.id); return; }
+    const a = e.target.closest('button.rw-add');
+    if (a) openSettingsAt(a.dataset.tier);
+  });
+
+  /* ---------- tabs ---------- */
+  function setView(v) {
+    view = v;
+    ['steps', 'photo', 'cal', 'work', 'stats', 'rewards'].forEach(n => { $('view-' + n).hidden = n !== v; });
+    document.querySelector('.daynav').style.visibility = (v === 'stats' || v === 'rewards') ? 'hidden' : '';
+    sphereRun(v === 'steps');
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.dataset.view === v) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+    });
+    if (v === 'cal') mainCal.showMonthOf(viewKey);
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
+
+  /* ---------- steps actions ---------- */
+  function saveSteps() {
+    const raw = $('stepsInput').value.replace(/[,\s]/g, '');
+    const err = $('stepsErr');
+    if (!/^\d{1,6}$/.test(raw)) {
+      err.textContent = 'Enter your step count as a whole number, like 6200.';
+      err.hidden = false;
+      return;
+    }
+    err.hidden = true;
+    const hadHit = dayHit(viewKey);
+    state.days[viewKey] = { steps: parseInt(raw, 10), ts: Date.now(), src: 'manual' };
+    persist();
+    renderHero(true); renderPhotoStrip(); mainCal.render(); renderDayCard(); renderRewards();
+    toast(!hadHit && dayHit(viewKey) ? 'Steps saved, +100 points earned' : 'Steps saved');
+  }
+  $('saveSteps').addEventListener('click', saveSteps);
+  $('stepsInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveSteps(); } });
+
+  /* ---------- header + calendar events ---------- */
+  $('prevDay').addEventListener('click', () => goTo(shiftKey(viewKey, -1)));
+  $('nextDay').addEventListener('click', () => { if (viewKey < todayKey()) goTo(shiftKey(viewKey, 1)); });
+  $('dcEdit').addEventListener('click', () => setView('steps'));
+  $('dcPhoto').addEventListener('click', () => setView('photo'));
+  $('dcWorkBtn').addEventListener('click', () => setView('work'));
+  $('photoStrip').addEventListener('click', e => {
+    const b = e.target.closest('button.hday');
+    if (!b) return;
+    goTo(b.dataset.k);
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+
+  /* ---------- photo events ---------- */
+  $('addBtn').addEventListener('click', () => $('photoInput').click());
+  $('replaceBtn').addEventListener('click', () => $('photoInput').click());
+  $('photoInput').addEventListener('change', async () => {
+    const input = $('photoInput');
+    const f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return;
+    const k = viewKey;
+    try {
+      toast('Saving photo');
+      const rec = await makeBlobs(f);
+      try { await dbPut(k, rec); }
+      catch (e) { persistOK = false; $('persistNote').hidden = false; }
+      setPhotoCache(k, rec);
+      toast('Photo saved');
+    } catch (e) {
+      toast("Couldn't read that photo. Try a different one.");
+    }
+    renderAll();
+  });
+  $('removeBtn').addEventListener('click', async () => {
+    const btn = $('removeBtn');
+    if (!removeArmed) {
+      removeArmed = true;
+      btn.textContent = 'Tap again to remove';
+      clearTimeout(armTimer);
+      armTimer = setTimeout(() => { removeArmed = false; btn.textContent = 'Remove photo'; }, 3000);
+      return;
+    }
+    clearTimeout(armTimer);
+    const k = viewKey, old = photos.get(k);
+    try { await dbDelete(k); } catch (e) { /* keep going */ }
+    if (old) { URL.revokeObjectURL(old.fullUrl); URL.revokeObjectURL(old.thumbUrl); photos.delete(k); }
+    toast('Photo removed');
+    renderAll();
+  });
+
+  /* ---------- settings drawer ---------- */
+  const drawer = $('drawer'), scrim = $('scrim');
+  let drawerPage = 'menu';
+  const PAGE_TITLES = { menu: 'Settings', goals: 'Step goals', edit: 'Goal for certain days', units: 'Units', rewards: 'Rewards', reward: 'Reward', share: 'Profile and sharing', cloud: 'Cloud sync and Health', inbox: 'Shared with me', shared: 'Shared card', backup: 'Backup and restore' };
+
+  function showPage(name, title) {
+    drawerPage = name;
+    ['menu', 'goals', 'edit', 'units', 'rewards', 'reward', 'share', 'cloud', 'inbox', 'shared', 'backup'].forEach(n => { $('dp-' + n).hidden = n !== name; });
+    $('drawerTitle').textContent = title || PAGE_TITLES[name];
+    $('drawerBack').hidden = name === 'menu';
+    $('drawerBody').scrollTop = 0;
+    if (name === 'goals') { $('baseInput').value = String(baseGoalOn(todayKey())); renderOvrList(); }
+    if (name === 'units') renderUnits();
+    if (name === 'rewards') renderRewardList();
+    if (name === 'share') renderSharePage();
+    if (name === 'cloud') renderCloudPage();
+    if (name === 'inbox') { renderInbox(); if (signedIn()) pullShares(false).catch(() => {}); }
+    if (name === 'backup') $('bkErr').hidden = true;
+  }
+  function openDrawer() {
+    showPage('menu');
+    scrim.classList.add('show');
+    drawer.classList.add('open');
+    $('app').inert = true; $('tabbar').inert = true;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => $('drawerTitle').focus());
+  }
+  function closeDrawer() {
+    scrim.classList.remove('show');
+    drawer.classList.remove('open');
+    $('app').inert = false; $('tabbar').inert = false;
+    document.body.style.overflow = '';
+    $('openSettings').focus();
+  }
+  function drawerBack() {
+    if (drawerPage === 'edit') showPage('goals');
+    else if (drawerPage === 'reward') showPage('rewards');
+    else if (drawerPage === 'shared') showPage('inbox');
+    else if (['goals', 'units', 'rewards', 'share', 'cloud', 'inbox', 'backup'].includes(drawerPage)) showPage('menu');
+    $('drawerTitle').focus();
+  }
+  $('openSettings').addEventListener('click', openDrawer);
+  $('drawerClose').addEventListener('click', closeDrawer);
+  $('drawerBack').addEventListener('click', drawerBack);
+  scrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
+  $('openGoals').addEventListener('click', () => { showPage('goals'); $('drawerTitle').focus(); });
+  $('openUnits').addEventListener('click', () => { showPage('units'); $('drawerTitle').focus(); });
+
+  // units
+  function renderUnits() {
+    document.querySelectorAll('#dp-units .seg button').forEach(b => {
+      const [t, v] = b.dataset.u.split(':');
+      b.setAttribute('aria-pressed', String(state.units[t] === v));
+    });
+  }
+  document.querySelectorAll('#dp-units .seg button').forEach(b => b.addEventListener('click', () => {
+    const [t, v] = b.dataset.u.split(':');
+    state.units[t] = v;
+    persist();
+    renderUnits();
+    renderAll();
+  }));
+
+  // rewards settings
+  $('openRewards').addEventListener('click', () => { showPage('rewards'); $('drawerTitle').focus(); });
+  let rw = { id: null, tier: 'star1', once: false };
+  let rwDelTimer = 0, rwDelArmed = false;
+  function renderRewardList() {
+    const list = [...state.rewards].sort((a, b) => rTier(a.tier).cost - rTier(b.tier).cost || a.name.localeCompare(b.name));
+    $('rwEmpty').hidden = list.length > 0;
+    $('rwList').replaceChildren(...list.map(r => {
+      const t = rTier(r.tier);
+      const li = document.createElement('li');
+      li.className = 'ovr-row';
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ovr'; b.dataset.id = r.id;
+      b.setAttribute('aria-label', `${r.name}, ${starLabel(t.stars)}, ${nf.format(t.cost)} points. Edit`);
+      const main = document.createElement('span'); main.className = 'o-main';
+      const s1 = document.createElement('strong'); s1.textContent = r.name;
+      const s2 = document.createElement('small'); s2.append(starsEl(t.stars, true)); if (r.once) s2.append(document.createTextNode('One-time'));
+      main.append(s1, s2);
+      const g = document.createElement('span'); g.className = 'o-goal'; g.textContent = nf.format(t.cost) + ' pts';
+      b.append(main, g);
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'trash'; del.dataset.id = r.id;
+      del.setAttribute('aria-label', 'Delete ' + r.name);
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5A.5.5 0 0 1 9.5 4h5a.5.5 0 0 1 .5.5V7"/></svg>';
+      li.append(b, del);
+      return li;
+    }));
+  }
+  function syncRewardEditor() {
+    document.querySelectorAll('#rwTiers button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tier === rw.tier)));
+    document.querySelectorAll('#rwOnce button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.once === '1') === rw.once)));
+    $('delReward').hidden = !rw.id;
+    clearTimeout(rwDelTimer); rwDelArmed = false; $('delReward').textContent = 'Delete';
+    $('rwErr').hidden = true;
+  }
+  function openRewardEditor(id, tier) {
+    const r = id ? state.rewards.find(x => x.id === id) : null;
+    rw = { id: r ? r.id : null, tier: r ? rTier(r.tier).id : (tier || 'star1'), once: r ? r.once : false };
+    $('rwName').value = r ? r.name : '';
+    showPage('reward', r ? 'Edit reward' : 'New reward');
+    syncRewardEditor();
+    $('drawerTitle').focus();
+  }
+  function openSettingsAt(tier) { openDrawer(); openRewardEditor(null, tier); }
+  $('rwTiers').replaceChildren(...R_TIERS.map(t => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = t.cls; b.dataset.tier = t.id; b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', `${starLabel(t.stars)}, ${nf.format(t.cost)} points`);
+    const c = document.createElement('span'); c.className = 't-cost'; c.textContent = `${nf.format(t.cost)} points`;
+    b.append(starsEl(t.stars), c);
+    return b;
+  }));
+  $('addReward').addEventListener('click', () => openRewardEditor(null));
+  $('rwList').addEventListener('click', e => {
+    const d = e.target.closest('button.trash');
+    if (d) { confirmDeleteReward(d.dataset.id); return; }
+    const b = e.target.closest('button.ovr');
+    if (b) openRewardEditor(b.dataset.id);
+  });
+  $('rwTiers').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b && b.dataset.tier) { rw.tier = b.dataset.tier; syncRewardEditor(); }
+  });
+  $('rwOnce').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b && b.dataset.once !== undefined) { rw.once = b.dataset.once === '1'; syncRewardEditor(); }
+  });
+  $('saveReward').addEventListener('click', () => {
+    const name = $('rwName').value.trim().replace(/\s+/g, ' ');
+    if (!name) { $('rwErr').textContent = 'Give the reward a name.'; $('rwErr').hidden = false; return; }
+    if (rw.id) {
+      const r = state.rewards.find(x => x.id === rw.id);
+      if (r) { r.name = name; r.tier = rw.tier; r.once = rw.once; }
+    } else {
+      state.rewards.push({ id: newId(), name, tier: rw.tier, once: rw.once });
+    }
+    persist();
+    renderAll();
+    showPage('rewards');
+    $('drawerTitle').focus();
+    toast('Reward saved');
+  });
+  $('rwName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('saveReward').click(); } });
+  $('delReward').addEventListener('click', () => { if (rw.id) confirmDeleteReward(rw.id); });
+
+  /* ---------- profile + sharing ---------- */
+  const share = { day: todayKey(), inc: { steps: true, workouts: true, photo: true }, blob: null, text: '', url: null, ver: 0, timer: 0 };
+  const shareAvail = k => ({ steps: stepsOf(k) > 0, workouts: (state.workouts[k] || []).length > 0, photo: photos.has(k) });
+  function shareEff(k) {
+    const a = shareAvail(k);
+    return { steps: share.inc.steps && a.steps, workouts: share.inc.workouts && a.workouts, photo: share.inc.photo && a.photo };
+  }
+  function workoutLines(k) {
+    const out = [];
+    groupByEx(state.workouts[k] || []).forEach((entries, key) => {
+      const nm = exName(key);
+      if (isCardioKey(key)) {
+        out.push(`${nm}: ${entries.map(describe).join('; ')}`);
+      } else {
+        let best = null;
+        entries.forEach(e => {
+          const kg = e.kg || 0;
+          if (!best || kg > best.kg + 1e-9 || (Math.abs(kg - best.kg) <= 1e-9 && e.reps > best.reps)) best = { kg, reps: e.reps };
+        });
+        out.push(`${nm}: ${entries.length} ${entries.length === 1 ? 'set' : 'sets'}, best ${fmtWeight(best.kg)} × ${best.reps}`);
+      }
+    });
+    return out;
+  }
+  function shareText(k, eff) {
+    const nm = (state.profile.name || '').trim();
+    const parts = [(nm ? nm + ' on ' : '') + fmtFull(k)];
+    if (eff.steps) parts.push(`Steps: ${nf.format(stepsOf(k))} of ${nf.format(goalOf(k))}` + (stepsOf(k) >= goalOf(k) ? ' (goal reached)' : ''));
+    if (eff.workouts) workoutLines(k).forEach(l => parts.push(l));
+    return parts.join('\n');
+  }
+
+  function cardRR(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r);
+    g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y);
+    g.closePath();
+  }
+  function fitText(g, text, maxW) {
+    if (g.measureText(text).width <= maxW) return text;
+    let t = text;
+    while (t.length > 1 && g.measureText(t + '\u2026').width > maxW) t = t.slice(0, -1);
+    return t + '\u2026';
+  }
+  function drawSphere(g, cx, cy, r, pct) {
+    const fill = fillOf(pct);
+    g.save();
+    const sh = g.createRadialGradient(cx, cy + r * 1.1, 0, cx, cy + r * 1.1, r * 0.9);
+    sh.addColorStop(0, 'rgba(0,0,0,.35)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = sh;
+    g.beginPath(); g.ellipse(cx, cy + r * 1.1, r * 0.7, r * 0.1, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+
+    g.save();
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip();
+    const glass = g.createRadialGradient(cx - r * 0.2, cy - r * 0.36, 0, cx, cy, r * 1.1);
+    glass.addColorStop(0, '#FBFEFF'); glass.addColorStop(0.7, '#E4F0F5'); glass.addColorStop(1, '#C9DDE7');
+    g.fillStyle = glass; g.fillRect(cx - r, cy - r, r * 2, r * 2);
+
+    const levelY = cy + r - fill * 2 * r;
+    const half = Math.sqrt(Math.max(0, r * r - (levelY - cy) * (levelY - cy)));
+    g.save();
+    g.translate(cx, cy); g.rotate(-0.07); g.translate(-cx, -cy);
+    const body = g.createLinearGradient(0, levelY, 0, cy + r);
+    body.addColorStop(0, '#6FC9EE'); body.addColorStop(1, '#2A94D0');
+    g.fillStyle = body; g.fillRect(cx - r * 2, levelY, r * 4, r * 3);
+    g.fillStyle = '#A8EDFF';
+    g.beginPath(); g.ellipse(cx, levelY, half, half * 0.2, 0, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.65)'; g.lineWidth = Math.max(1.5, r * 0.012);
+    g.beginPath(); g.ellipse(cx, levelY, half, half * 0.2, 0, 0, Math.PI * 2); g.stroke();
+    g.restore();
+
+    const shade = g.createRadialGradient(cx - r * 0.28, cy - r * 0.4, 0, cx - r * 0.1, cy - r * 0.1, r * 1.1);
+    shade.addColorStop(0, 'rgba(10,34,54,0)'); shade.addColorStop(0.55, 'rgba(10,34,54,0)'); shade.addColorStop(1, 'rgba(10,34,54,.46)');
+    g.fillStyle = shade; g.fillRect(cx - r, cy - r, r * 2, r * 2);
+    const bounce = g.createRadialGradient(cx + r * 0.44, cy + r * 0.72, 0, cx + r * 0.44, cy + r * 0.72, r * 0.84);
+    bounce.addColorStop(0, 'rgba(255,255,255,.4)'); bounce.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = bounce; g.fillRect(cx - r, cy - r, r * 2, r * 2);
+    g.restore();
+
+    g.strokeStyle = 'rgba(234,242,246,.55)'; g.lineWidth = Math.max(2, r * 0.026);
+    g.beginPath(); g.arc(cx, cy, r - 1, 0, Math.PI * 2); g.stroke();
+    g.save();
+    g.translate(cx - r * 0.38, cy - r * 0.52); g.rotate(-0.63);
+    const hl = g.createRadialGradient(0, 0, 0, 0, 0, r * 0.32);
+    hl.addColorStop(0, 'rgba(255,255,255,.95)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = hl; g.beginPath(); g.ellipse(0, 0, r * 0.32, r * 0.14, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+    g.fillStyle = 'rgba(255,255,255,.95)';
+    g.beginPath(); g.arc(cx - r * 0.15, cy - r * 0.68, r * 0.038, 0, Math.PI * 2); g.fill();
+  }
+
+  async function renderCard(k, eff) {
+    try {
+      if (document.fonts && document.fonts.load) {
+        await Promise.all([document.fonts.load('800 80px "Bricolage Grotesque"'), document.fonts.load('600 36px "Figtree"')]);
+      }
+    } catch (e) { /* fall back to system fonts */ }
+    const W = 1080, P = 64, GAP = 44;
+    const steps = stepsOf(k), goal = goalOf(k), pct = Math.min(1, steps / goal);
+    const name = (state.profile.name || '').trim();
+    const lines = eff.workouts ? workoutLines(k) : [];
+    const shown = lines.slice(0, 7), more = lines.length - shown.length;
+    let bmp = null;
+    const ph = eff.photo ? photos.get(k) : null;
+    if (ph) { try { bmp = await createImageBitmap(ph.full); } catch (e) { bmp = null; } }
+    const heroH = bmp ? 760 : (eff.steps ? 440 : 0);
+    const rowH = eff.steps ? (bmp ? 210 : 170) : 0;
+    const workH = shown.length ? 64 + (shown.length + (more > 0 ? 1 : 0)) * 54 : 0;
+    const blocks = [110, heroH, rowH, workH].filter(h => h > 0);
+    const H = P + blocks.reduce((a, b) => a + b, 0) + GAP * blocks.length + 40 + P / 2;
+
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0E2233'); bg.addColorStop(1, '#0A1722');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const glow = g.createRadialGradient(W * 0.78, 0, 0, W * 0.78, 0, W * 0.9);
+    glow.addColorStop(0, 'rgba(96,205,255,.28)'); glow.addColorStop(1, 'rgba(96,205,255,0)');
+    g.fillStyle = glow; g.fillRect(0, 0, W, H);
+
+    const DISPLAY = '"Bricolage Grotesque", system-ui, -apple-system, sans-serif';
+    const BODY = '"Figtree", system-ui, -apple-system, sans-serif';
+    g.textBaseline = 'alphabetic';
+    let y = P;
+    g.fillStyle = '#FFFFFF'; g.font = `800 58px ${DISPLAY}`; g.textAlign = 'left';
+    g.fillText(fitText(g, name || 'Brim', W - 2 * P), P, y + 52);
+    g.fillStyle = '#9DB2C1'; g.font = `600 34px ${BODY}`;
+    g.fillText(parseKey(k).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }), P, y + 100);
+    y += 110 + GAP;
+
+    if (bmp) {
+      const w = W - 2 * P, h = heroH;
+      g.save();
+      cardRR(g, P, y, w, h, 40); g.clip();
+      const sc = Math.max(w / bmp.width, h / bmp.height);
+      const dw = bmp.width * sc, dh = bmp.height * sc;
+      g.drawImage(bmp, P + (w - dw) / 2, y + (h - dh) * 0.25, dw, dh);
+      g.restore();
+      if (bmp.close) bmp.close();
+      y += h + GAP;
+    } else if (eff.steps) {
+      drawSphere(g, W / 2, y + 220, 200, pct);
+      y += heroH + GAP;
+    }
+
+    if (eff.steps) {
+      const reached = steps >= goal;
+      const sub = `of ${nf.format(goal)} steps` + (reached ? '  \u2022  Goal reached' : '');
+      if (bmp) {
+        drawSphere(g, P + 86, y + 98, 80, pct);
+        g.textAlign = 'left';
+        g.fillStyle = '#FFFFFF'; g.font = `800 112px ${DISPLAY}`;
+        g.fillText(nf.format(steps), P + 210, y + 118);
+        g.fillStyle = reached ? '#A8EDFF' : '#9DB2C1'; g.font = `600 36px ${BODY}`;
+        g.fillText(fitText(g, sub, W - P - (P + 210)), P + 210, y + 170);
+      } else {
+        g.textAlign = 'center';
+        g.fillStyle = '#FFFFFF'; g.font = `800 112px ${DISPLAY}`;
+        g.fillText(nf.format(steps), W / 2, y + 100);
+        g.fillStyle = reached ? '#A8EDFF' : '#9DB2C1'; g.font = `600 36px ${BODY}`;
+        g.fillText(sub, W / 2, y + 152);
+        g.textAlign = 'left';
+      }
+      y += rowH + GAP;
+    }
+
+    if (shown.length) {
+      g.textAlign = 'left';
+      g.fillStyle = '#FFFFFF'; g.font = `800 42px ${DISPLAY}`;
+      g.fillText('Workouts', P, y + 42);
+      g.font = `600 34px ${BODY}`;
+      let ly = y + 64 + 36;
+      shown.forEach(l => {
+        g.fillStyle = '#A8EDFF'; g.beginPath(); g.arc(P + 8, ly - 12, 6, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#DDEAF1';
+        g.fillText(fitText(g, l, W - 2 * P - 36), P + 36, ly);
+        ly += 54;
+      });
+      if (more > 0) { g.fillStyle = '#9DB2C1'; g.fillText(`+ ${more} more`, P + 36, ly); }
+      y += workH + GAP;
+    }
+    g.fillStyle = '#6F8798'; g.font = `600 28px ${BODY}`; g.textAlign = 'left';
+    g.fillText('Brim', P, H - P / 2 - 6);
+
+    return new Promise((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error('blob')), 'image/png'));
+  }
+
+  async function refreshShare() {
+    const ver = ++share.ver;
+    const k = share.day, eff = shareEff(k), a = shareAvail(k);
+    const any = eff.steps || eff.workouts || eff.photo;
+    $('shGo').disabled = true;
+    share.blob = null;
+    if (!any) {
+      $('shPreview').hidden = true;
+      $('shNote').textContent = (a.steps || a.workouts || a.photo) ? 'Pick at least one thing to include.' : 'Nothing is logged for this day yet.';
+      return;
+    }
+    $('shNote').textContent = '';
+    try {
+      const blob = await renderCard(k, eff);
+      if (ver !== share.ver) return;
+      share.blob = blob;
+      share.text = shareText(k, eff);
+      if (share.url) URL.revokeObjectURL(share.url);
+      share.url = URL.createObjectURL(blob);
+      $('shPreview').src = share.url;
+      $('shPreview').hidden = false;
+      $('shGo').disabled = false;
+    } catch (e) {
+      if (ver === share.ver) $('shNote').textContent = "Couldn't build the card. Try again.";
+    }
+  }
+  const scheduleShare = () => { clearTimeout(share.timer); share.timer = setTimeout(refreshShare, 120); };
+
+  function renderSharePage() {
+    $('profName').value = state.profile.name;
+    $('shDay').textContent = fmtLong(share.day);
+    $('shRel').textContent = relLabel(share.day);
+    $('shNext').disabled = share.day >= todayKey();
+    const a = shareAvail(share.day);
+    document.querySelectorAll('#shInc button').forEach(b => {
+      const key = b.dataset.k;
+      b.disabled = !a[key];
+      b.setAttribute('aria-pressed', String(!!(share.inc[key] && a[key])));
+    });
+    renderSendSection();
+    scheduleShare();
+  }
+
+  async function doShare() {
+    const blob = share.blob;
+    if (!blob) return;
+    const k = share.day, text = share.text;
+    const file = new File([blob], `brim-${k}.png`, { type: 'image/png' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text, title: 'Brim' });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ text, title: 'Brim' });
+        toast('Shared the text. Picture sharing is not available here.');
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+    try {
+      const dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null;
+      if (dl) { await dl.save({ filename: `brim-${k}.png`, data: blob }); toast('Card saved'); return; }
+    } catch (e) {
+      if (e && e.code === 'declined') return;
+    }
+    try { await navigator.clipboard.writeText(text); toast('Copied the summary to paste into a message'); return; } catch (e) { /* ignore */ }
+    toast("Sharing isn't available in this browser.");
+  }
+
+  $('openShare').addEventListener('click', () => { share.day = viewKey; showPage('share'); $('drawerTitle').focus(); });
+  $('dcShare').addEventListener('click', () => { openDrawer(); share.day = viewKey; showPage('share'); $('drawerTitle').focus(); });
+  $('shPrev').addEventListener('click', () => { share.day = shiftKey(share.day, -1); renderSharePage(); });
+  $('shNext').addEventListener('click', () => { if (share.day < todayKey()) { share.day = shiftKey(share.day, 1); renderSharePage(); } });
+  $('shInc').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled || !b.dataset.k) return;
+    share.inc[b.dataset.k] = !share.inc[b.dataset.k];
+    renderSharePage();
+  });
+  $('profName').addEventListener('change', () => {
+    state.profile.name = $('profName').value.trim().replace(/\s+/g, ' ').slice(0, 30);
+    persist();
+    scheduleShare();
+    if (signedIn()) cloudEnsureProfile().catch(() => {});
+  });
+  $('profName').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('profName').blur(); } });
+  $('shGo').addEventListener('click', doShare);
+
+  /* ---------- cloud sync (Supabase) ---------- */
+  // Hosting Brim yourself? You can paste your Supabase project URL and public key here once,
+  // or leave these empty and enter them in the app (Settings, Cloud sync and Health).
+  const BRIM_PRESET = { url: '', anon: '' };
+  const CLOUD_KEY = 'brim:cloud:v1';
+  const cloud = { url: BRIM_PRESET.url, anon: BRIM_PRESET.anon, session: null, profile: null, contacts: [], inbox: [], sent: [], lastSync: 0, status: '' };
+  try {
+    const c = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
+    if (c && typeof c === 'object') {
+      if (!cloud.url && typeof c.url === 'string') cloud.url = c.url;
+      if (!cloud.anon && typeof c.anon === 'string') cloud.anon = c.anon;
+      if (c.session && c.session.access_token) cloud.session = c.session;
+      if (c.profile && typeof c.profile.handle === 'string') cloud.profile = c.profile;
+      if (Array.isArray(c.contacts)) cloud.contacts = c.contacts.filter(x => x && typeof x.handle === 'string').slice(0, 20);
+    }
+  } catch (e) { /* ignore */ }
+  const cloudSave = () => {
+    try { localStorage.setItem(CLOUD_KEY, JSON.stringify({ url: cloud.url, anon: cloud.anon, session: cloud.session, profile: cloud.profile, contacts: cloud.contacts })); } catch (e) { /* ignore */ }
+  };
+  const cloudReady = () => !!(cloud.url && cloud.anon);
+  const signedIn = () => !!(cloud.session && cloud.session.access_token);
+  const myId = () => (cloud.session && cloud.session.user ? cloud.session.user.id : '');
+  const NET_MSG = "Couldn't reach Supabase. Check your connection. If you opened Brim inside Claude, cloud features only work in the copy you host yourself.";
+
+  function cloudMsg(status, data) {
+    const m = data && (data.message || data.msg || data.error_description || data.hint || data.error);
+    return m ? String(m) : `Something went wrong (${status}).`;
+  }
+  function setSession(r) {
+    if (!r || !r.access_token) return false;
+    cloud.session = {
+      access_token: r.access_token, refresh_token: r.refresh_token,
+      expires_at: r.expires_at || Math.floor(Date.now() / 1000) + (r.expires_in || 3600),
+      user: r.user ? { id: r.user.id, email: r.user.email } : ((cloud.session && cloud.session.user) || null)
+    };
+    cloudSave();
+    return true;
+  }
+  let refreshing = null;
+  function refreshSession() {
+    if (refreshing) return refreshing;
+    refreshing = (async () => {
+      try {
+        const res = await fetch(cloud.url + '/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST', headers: { apikey: cloud.anon, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: cloud.session.refresh_token })
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || !data.access_token) {
+          if (res.status === 400 || res.status === 401) { cloud.session = null; cloudSave(); updateBadges(); }
+          throw new Error('Your session ended. Sign in again.');
+        }
+        setSession(data);
+      } finally { refreshing = null; }
+    })();
+    return refreshing;
+  }
+  async function ensureFresh() {
+    const sess = cloud.session;
+    if (sess && sess.expires_at && Date.now() / 1000 > sess.expires_at - 60) await refreshSession();
+  }
+  async function sbFetch(path, o = {}) {
+    if (!cloudReady()) throw new Error('Connect a Supabase project first.');
+    const authed = o.auth !== false && signedIn();
+    if (authed) await ensureFresh();
+    const headers = Object.assign({ apikey: cloud.anon, 'Content-Type': 'application/json' }, o.headers || {});
+    if (authed && cloud.session) headers.Authorization = 'Bearer ' + cloud.session.access_token;
+    let res;
+    try {
+      res = await fetch(cloud.url + path, { method: o.method || 'GET', headers, body: o.body === undefined ? undefined : JSON.stringify(o.body) });
+    } catch (e) { throw new Error(NET_MSG); }
+    const txt = await res.text();
+    let data = null;
+    if (txt) { try { data = JSON.parse(txt); } catch (e) { data = txt; } }
+    if (res.status === 401 && authed && o.retried !== true) {
+      try { await refreshSession(); return sbFetch(path, Object.assign({}, o, { retried: true })); } catch (e) { /* fall through */ }
+    }
+    if (!res.ok) throw new Error(cloudMsg(res.status, data));
+    return data;
+  }
+  async function authCall(path, body) {
+    let res;
+    try {
+      res = await fetch(cloud.url + path, { method: 'POST', headers: { apikey: cloud.anon, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    } catch (e) { throw new Error(NET_MSG); }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(cloudMsg(res.status, data));
+    return data;
+  }
+  async function cloudSignIn(email, pass) { setSession(await authCall('/auth/v1/token?grant_type=password', { email, password: pass })); }
+  async function cloudSignUp(email, pass, name) {
+    const d = await authCall('/auth/v1/signup', { email, password: pass, data: { name } });
+    if (!setSession(d)) {
+      throw new Error('Account created, but Supabase is waiting for you to confirm your email. Open the link it sent, or switch off "Confirm email" in Supabase, then sign in.');
+    }
+  }
+  async function cloudEnsureProfile() {
+    if (!signedIn()) return null;
+    const pr = await sbFetch('/rest/v1/rpc/ensure_profile', { method: 'POST', body: { p_name: state.profile.name || '' } });
+    if (pr && pr.handle) { cloud.profile = { name: pr.name, handle: pr.handle, token: pr.shortcut_token }; cloudSave(); }
+    return cloud.profile;
+  }
+
+  /* steps from the iPhone Shortcut */
+  async function pullSteps() {
+    if (!signedIn()) return 0;
+    const since = shiftKey(todayKey(), -30);
+    const rows = await sbFetch(`/rest/v1/steps?select=day,steps,updated_at&day=gte.${since}&order=day.desc`);
+    let changed = 0;
+    (rows || []).forEach(r => {
+      if (!isKey(r.day) || !(r.steps >= 0)) return;
+      const ts = Date.parse(r.updated_at) || 0;
+      const cur = state.days[r.day];
+      if (cur && cur.steps === r.steps) { if (ts > (cur.ts || 0)) cur.ts = ts; return; }
+      if (cur && r.steps === 0) return;
+      if (!cur || ts > (cur.ts || 0)) { state.days[r.day] = { steps: r.steps, ts, src: 'health' }; changed++; }
+    });
+    if (changed) {
+      persist();
+      renderHero(viewKey === todayKey());
+      renderAll();
+    }
+    return changed;
+  }
+
+  /* shared cards */
+  const SHARE_COLS = 'id,from_name,from_handle,to_name,to_handle,day,payload,created_at,read_at,has_photo';
+  const unreadCount = () => cloud.inbox.filter(s => !s.read_at).length;
+  function updateBadges() {
+    const n = signedIn() ? unreadCount() : 0;
+    $('gearBadge').hidden = n === 0;
+    $('inboxCount').hidden = n === 0;
+    $('inboxCount').textContent = n ? `${n} new` : '';
+  }
+  async function pullShares(notify) {
+    if (!signedIn()) return;
+    const me = myId();
+    const [inbox, sent] = await Promise.all([
+      sbFetch(`/rest/v1/shares?select=${SHARE_COLS}&to_user=eq.${me}&order=created_at.desc&limit=60`),
+      sbFetch(`/rest/v1/shares?select=${SHARE_COLS}&from_user=eq.${me}&order=created_at.desc&limit=60`)
+    ]);
+    const known = new Set(cloud.inbox.map(x => x.id));
+    const fresh = (inbox || []).filter(x => !x.read_at && !known.has(x.id));
+    cloud.inbox = inbox || [];
+    cloud.sent = sent || [];
+    if (notify && fresh.length) toast(fresh.length === 1 ? `New share from ${fresh[0].from_name || fresh[0].from_handle}` : `${fresh.length} new shares`);
+    updateBadges();
+    if (drawerPage === 'inbox') renderInbox();
+  }
+
+  async function cloudTick(initial) {
+    if (!signedIn()) return 0;
+    try {
+      const n = await pullSteps();
+      await pullShares(!initial);
+      cloud.lastSync = Date.now();
+      cloud.status = '';
+      return n;
+    } catch (e) {
+      cloud.status = e.message;
+      throw e;
+    } finally { updateCloudStatus(); }
+  }
+  let cloudTimer = 0;
+  function startPolling() {
+    clearInterval(cloudTimer);
+    cloudTimer = setInterval(() => { if (document.visibilityState === 'visible' && signedIn()) cloudTick(false).catch(() => {}); }, 90000);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && signedIn()) cloudTick(false).catch(() => {});
+  });
+
+  function updateCloudStatus() {
+    const el = $('cloudSync');
+    if (!el) return;
+    if (cloud.status) el.textContent = cloud.status;
+    else if (cloud.lastSync) {
+      const mins = Math.round((Date.now() - cloud.lastSync) / 60000);
+      el.textContent = mins < 1 ? 'Synced just now' : `Synced ${mins} min ago`;
+    } else el.textContent = 'Not synced yet';
+  }
+
+  const copyText = async text => {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* try the fallback */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  };
+  function cloudError(msg) { const e = $('cloudErr'); e.textContent = msg; e.hidden = !msg; }
+
+  function renderCloudPage() {
+    const ready = cloudReady(), inn = signedIn();
+    $('cloudConnect').hidden = ready;
+    $('cloudAuth').hidden = !(ready && !inn);
+    $('cloudIn').hidden = !inn;
+    $('cloudIntro').textContent = !ready
+      ? 'Cloud sync lets you receive cards from other Brim users and bring in steps from your iPhone Health app. It needs a free Supabase project. The SETUP file that came with Brim walks through it.'
+      : (!inn ? 'Sign in, or create your account on this device.' : '');
+    cloudError('');
+    $('tokMsg').hidden = true;
+    if (!ready) { $('cfgUrl').value = ''; $('cfgKey').value = ''; }
+    if (ready && !inn) { $('authName').value = state.profile.name || ''; $('authPass').value = ''; }
+    if (inn) {
+      $('kvEmail').textContent = (cloud.session.user && cloud.session.user.email) || '';
+      $('kvCode').textContent = cloud.profile ? cloud.profile.handle : '...';
+      $('valUrl').value = cloud.url + '/rest/v1/rpc/set_steps';
+      $('valKey').value = cloud.anon;
+      $('valTok').value = cloud.profile ? cloud.profile.token : '';
+      updateCloudStatus();
+      if (!cloud.profile) cloudEnsureProfile().then(pr => { if (pr) renderCloudPage(); }).catch(e => cloudError(e.message));
+    }
+  }
+
+  async function connectProject() {
+    let url = $('cfgUrl').value.trim().replace(/\/+$/, '');
+    const key = $('cfgKey').value.trim();
+    if (!/^https:\/\/[^\s/]+$/.test(url)) return cloudError('The project URL should look like https://abcdefgh.supabase.co');
+    if (key.length < 20) return cloudError('Paste the public key from Supabase (Project Settings, API Keys).');
+    $('cfgSave').disabled = true;
+    cloudError('');
+    try {
+      let res;
+      try { res = await fetch(url + '/auth/v1/health', { headers: { apikey: key } }); } catch (e) { throw new Error(NET_MSG); }
+      if (res.status === 401 || res.status === 403) throw new Error('Supabase did not accept that key. Copy the public key again.');
+      if (!res.ok) throw new Error('That address did not answer like a Supabase project.');
+      cloud.url = url; cloud.anon = key; cloudSave();
+      renderCloudPage();
+    } catch (e) { cloudError(e.message); }
+    finally { $('cfgSave').disabled = false; }
+  }
+
+  async function doAuth(create) {
+    const email = $('authEmail').value.trim(), pass = $('authPass').value, name = $('authName').value.trim().slice(0, 30);
+    if (!/^\S+@\S+\.\S+$/.test(email)) return cloudError('Enter your email address.');
+    if (pass.length < 6) return cloudError('Use a password with at least 6 characters.');
+    $('authIn').disabled = true; $('authUp').disabled = true;
+    cloudError('');
+    try {
+      if (name) { state.profile.name = name; persist(); }
+      if (create) await cloudSignUp(email, pass, name); else await cloudSignIn(email, pass);
+      await cloudEnsureProfile();
+      await cloudTick(true).catch(() => {});
+      startPolling();
+      updateBadges();
+      renderCloudPage();
+      toast(create ? 'Account created' : 'Signed in');
+    } catch (e) { cloudError(e.message); }
+    finally { $('authIn').disabled = false; $('authUp').disabled = false; }
+  }
+
+  $('openCloud').addEventListener('click', () => { showPage('cloud'); $('drawerTitle').focus(); });
+  $('cfgSave').addEventListener('click', connectProject);
+  $('authIn').addEventListener('click', () => doAuth(false));
+  $('authUp').addEventListener('click', () => doAuth(true));
+  $('authPass').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doAuth(false); } });
+  $('cfgReset').addEventListener('click', () => {
+    askConfirm({
+      title: 'Use a different project?', name: 'Forget this Supabase project', okLabel: 'Forget it', danger: true,
+      body: "Brim forgets the project address and key on this device. Your steps, workouts and photos stay here.",
+      onOk: () => { if (!BRIM_PRESET.url) { cloud.url = ''; cloud.anon = ''; } cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloudSave(); updateBadges(); renderCloudPage(); }
+    });
+  });
+  $('signOut').addEventListener('click', () => {
+    cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloud.lastSync = 0;
+    cloudSave(); updateBadges(); renderCloudPage(); toast('Signed out');
+  });
+  $('syncNow').addEventListener('click', async () => {
+    $('syncNow').disabled = true;
+    cloudError('');
+    try { const n = await cloudTick(false); toast(n ? `Updated steps for ${n} ${n === 1 ? 'day' : 'days'}` : 'Up to date'); }
+    catch (e) { cloudError(e.message); }
+    finally { $('syncNow').disabled = false; }
+  });
+  $('tokTest').addEventListener('click', async () => {
+    const m = $('tokMsg');
+    m.hidden = false; m.textContent = 'Checking...';
+    try {
+      const r = await sbFetch('/rest/v1/rpc/check_token', { method: 'POST', auth: false, body: { p_token: cloud.profile ? cloud.profile.token : '' } });
+      m.textContent = r ? 'Your token works.' : "That token isn't recognized. Ask Brim to sign out and in again.";
+    } catch (e) { m.textContent = e.message; }
+  });
+  $('cloudIn').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-copy]');
+    if (!b) return;
+    const ok = await copyText($(b.dataset.copy).value);
+    toast(ok ? 'Copied' : "Couldn't copy. Press and hold the text to copy it.");
+  });
+
+  /* sending a card inside Brim */
+  function renderSendSection() {
+    const on = signedIn();
+    $('sendIn').hidden = !on;
+    $('sendHint').hidden = on;
+    $('myCode').hidden = !(on && cloud.profile);
+    if (on && cloud.profile) $('myCode').textContent = `Your friend code is ${cloud.profile.handle}. Other users need it to send you cards.`;
+    $('sendContacts').replaceChildren(...cloud.contacts.map(c => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.dataset.handle = c.handle;
+      b.textContent = c.name || c.handle;
+      return b;
+    }));
+  }
+  async function compressForShare(blob) {
+    const bmp = await createImageBitmap(blob);
+    const sc = Math.min(1, 900 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(bmp.width * sc)); c.height = Math.max(1, Math.round(bmp.height * sc));
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    return c.toDataURL('image/jpeg', 0.78);
+  }
+  async function sendInBrim() {
+    const k = share.day, eff = shareEff(k), err = $('sendErr');
+    const fail = m => { err.textContent = m; err.hidden = false; };
+    const code = $('sendCode').value.trim().toLowerCase();
+    if (!code) return fail("Enter your friend's code.");
+    if (!(eff.steps || eff.workouts || eff.photo)) return fail('Pick at least one thing to include.');
+    err.hidden = true;
+    $('sendGo').disabled = true;
+    try {
+      const payload = {
+        steps: eff.steps ? stepsOf(k) : null,
+        goal: eff.steps ? goalOf(k) : null,
+        lines: eff.workouts ? workoutLines(k) : []
+      };
+      const photo = eff.photo && photos.get(k) ? await compressForShare(photos.get(k).full) : null;
+      const r = await sbFetch('/rest/v1/rpc/send_share', { method: 'POST', body: { p_handle: code, p_day: k, p_payload: payload, p_photo: photo } });
+      const nm = (r && r.to_name) || code;
+      if (!cloud.contacts.some(c => c.handle === code)) { cloud.contacts.unshift({ handle: code, name: nm }); cloud.contacts = cloud.contacts.slice(0, 20); cloudSave(); }
+      renderSendSection();
+      $('sendCode').value = '';
+      toast(`Sent to ${nm}`);
+      pullShares(false).catch(() => {});
+    } catch (e) { fail(e.message); }
+    finally { $('sendGo').disabled = false; }
+  }
+  $('sendGo').addEventListener('click', sendInBrim);
+  $('sendCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendInBrim(); } });
+  $('sendContacts').addEventListener('click', e => {
+    const b = e.target.closest('button.chip');
+    if (b) $('sendCode').value = b.dataset.handle;
+  });
+
+  /* inbox */
+  let inboxTab = 'in', openedShare = null;
+  function shareSummary(sh) {
+    const p = sh.payload || {}, parts = [];
+    if (p.steps != null) parts.push(`${nf.format(p.steps)} steps`);
+    const n = Array.isArray(p.lines) ? p.lines.length : 0;
+    if (n) parts.push(`${n} ${n === 1 ? 'exercise' : 'exercises'}`);
+    if (sh.has_photo) parts.push('photo');
+    return parts.join(', ');
+  }
+  function renderInbox() {
+    document.querySelectorAll('#inboxTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === inboxTab)));
+    const list = inboxTab === 'in' ? cloud.inbox : cloud.sent;
+    $('inboxEmpty').hidden = list.length > 0;
+    $('inboxEmpty').textContent = !signedIn() ? 'Set up Cloud sync to send and receive cards.'
+      : (inboxTab === 'in' ? 'Nothing has been shared with you yet.' : 'You have not sent anything yet.');
+    $('inboxList').replaceChildren(...list.map(sh => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ovr'; b.dataset.id = sh.id;
+      const main = document.createElement('span'); main.className = 'o-main';
+      const st = document.createElement('strong');
+      if (inboxTab === 'in' && !sh.read_at) { const d = document.createElement('span'); d.className = 'unread'; st.appendChild(d); }
+      st.appendChild(document.createTextNode(inboxTab === 'in' ? (sh.from_name || sh.from_handle) : 'To ' + (sh.to_name || sh.to_handle)));
+      const sm = document.createElement('small'); sm.textContent = `${fmtShort(sh.day)}${shareSummary(sh) ? ': ' + shareSummary(sh) : ''}`;
+      main.append(st, sm);
+      const right = document.createElement('span'); right.className = 'o-right';
+      right.textContent = inboxTab === 'in' ? (sh.read_at ? '' : 'New') : (sh.read_at ? 'Seen' : 'Sent');
+      b.append(main, right);
+      b.setAttribute('aria-label', `${st.textContent}, ${fmtLong(sh.day)}. Open`);
+      li.appendChild(b);
+      return li;
+    }));
+  }
+  function renderSharedDetail(sh, incoming) {
+    const p = sh.payload || {};
+    $('shdMeta').textContent = `${fmtLong(sh.day)}. ${incoming ? 'Sent to you' : 'You sent this'} ${new Date(sh.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.`;
+    $('shdPhoto').hidden = true;
+    const hasSteps = p.steps != null;
+    $('shdSteps').hidden = !hasSteps;
+    if (hasSteps) {
+      $('shdStepsTxt').textContent = `${nf.format(p.steps)} steps`;
+      const g = p.goal > 0 ? p.goal : 0;
+      $('shdGoalTxt').textContent = g ? `Goal ${nf.format(g)}, ${Math.round(p.steps / g * 100)}% done` : '';
+      $('shdFill').style.setProperty('--p', (g ? Math.min(100, p.steps / g * 100) : 0) + '%');
+    }
+    const lines = Array.isArray(p.lines) ? p.lines : [];
+    $('shdWH').hidden = lines.length === 0;
+    $('shdLines').replaceChildren(...lines.map(l => {
+      const li = document.createElement('li');
+      const m = document.createElement('div'); m.className = 'h-main';
+      const s1 = document.createElement('strong'); s1.textContent = String(l);
+      m.appendChild(s1); li.appendChild(m);
+      return li;
+    }));
+  }
+  async function loadSharedPhoto(sh) {
+    try {
+      const rows = await sbFetch(`/rest/v1/shares?id=eq.${sh.id}&select=photo`);
+      const url = rows && rows[0] && rows[0].photo;
+      if (url && openedShare === sh && /^data:image\//.test(url)) { $('shdPhoto').src = url; $('shdPhoto').hidden = false; }
+    } catch (e) { /* the photo is optional */ }
+  }
+  async function openShared(id) {
+    const sh = cloud.inbox.find(x => x.id === id) || cloud.sent.find(x => x.id === id);
+    if (!sh) return;
+    openedShare = sh;
+    const incoming = cloud.inbox.includes(sh);
+    showPage('shared', incoming ? `From ${sh.from_name || sh.from_handle}` : `To ${sh.to_name || sh.to_handle}`);
+    renderSharedDetail(sh, incoming);
+    $('drawerTitle').focus();
+    if (sh.has_photo) loadSharedPhoto(sh);
+    if (incoming && !sh.read_at) {
+      try {
+        await sbFetch('/rest/v1/rpc/mark_shares_read', { method: 'POST', body: { p_ids: [sh.id] } });
+        sh.read_at = new Date().toISOString();
+        updateBadges();
+      } catch (e) { /* will show as new again next time */ }
+    }
+  }
+  $('openInbox').addEventListener('click', () => { showPage('inbox'); $('drawerTitle').focus(); });
+  $('inboxTabs').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b && b.dataset.t) { inboxTab = b.dataset.t; renderInbox(); }
+  });
+  $('inboxList').addEventListener('click', e => {
+    const b = e.target.closest('button.ovr');
+    if (b) openShared(b.dataset.id);
+  });
+  $('inboxRefresh').addEventListener('click', async () => {
+    try { await pullShares(false); toast('Refreshed'); } catch (e) { toast(e.message); }
+  });
+  $('shdDelete').addEventListener('click', () => {
+    const sh = openedShare;
+    if (!sh) return;
+    askConfirm({
+      title: 'Delete this card?', name: fmtLong(sh.day), okLabel: 'Delete', danger: true,
+      body: 'It is removed from Brim for you and for the other person.',
+      onOk: async () => {
+        try {
+          await sbFetch(`/rest/v1/shares?id=eq.${sh.id}`, { method: 'DELETE' });
+          cloud.inbox = cloud.inbox.filter(x => x.id !== sh.id);
+          cloud.sent = cloud.sent.filter(x => x.id !== sh.id);
+          updateBadges();
+          showPage('inbox');
+          $('drawerTitle').focus();
+          toast('Deleted');
+        } catch (e) { toast(e.message); }
+      }
+    });
+  });
+
+  /* backup and restore */
+  const blobToDataURL = b => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(b); });
+  function dataURLToBlob(u) {
+    const [h, b64] = u.split(',');
+    const mime = (h.match(/data:(.*?);base64/) || [])[1] || 'image/jpeg';
+    const bin = atob(b64), arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+  async function saveFile(blob, filename) {
+    try {
+      const dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null;
+      if (dl) { await dl.save({ filename, data: blob }); toast('Saved'); return; }
+    } catch (e) { if (e && e.code === 'declined') return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast('Saved');
+  }
+  async function exportBackup() {
+    $('bkExport').disabled = true;
+    try {
+      const out = {};
+      for (const [k, ph] of photos) out[k] = await blobToDataURL(ph.full);
+      const data = { app: 'brim', v: 1, exportedAt: new Date().toISOString(), state, photos: out };
+      await saveFile(new Blob([JSON.stringify(data)], { type: 'application/json' }), `brim-backup-${todayKey()}.json`);
+    } catch (e) { toast("Couldn't build the backup."); }
+    finally { $('bkExport').disabled = false; }
+  }
+  async function applyBackup(data) {
+    resetState();
+    hydrate(data.state);
+    persist();
+    for (const k of [...photos.keys()]) {
+      try { await dbDelete(k); } catch (e) { /* ignore */ }
+      const o = photos.get(k);
+      URL.revokeObjectURL(o.fullUrl); URL.revokeObjectURL(o.thumbUrl);
+      photos.delete(k);
+    }
+    const ph = data.photos || {};
+    for (const k of Object.keys(ph)) {
+      if (!isKey(k) || typeof ph[k] !== 'string') continue;
+      try {
+        const rec = await makeBlobs(dataURLToBlob(ph[k]));
+        try { await dbPut(k, rec); } catch (e) { persistOK = false; }
+        setPhotoCache(k, rec);
+      } catch (e) { /* skip a photo that can't be read */ }
+    }
+    viewKey = todayKey();
+    mainCal.setMonthOf(viewKey);
+    renderAll();
+    toast('Backup restored');
+  }
+  async function importBackup(file) {
+    const err = $('bkErr');
+    err.hidden = true;
+    let data;
+    try { data = JSON.parse(await file.text()); } catch (e) { data = null; }
+    if (!data || data.app !== 'brim' || !data.state || typeof data.state !== 'object') {
+      err.textContent = "That file doesn't look like a Brim backup."; err.hidden = false; return;
+    }
+    askConfirm({
+      title: 'Replace everything?', name: file.name || 'Backup file', okLabel: 'Restore', danger: true,
+      body: 'This replaces all steps, workouts, rewards, settings and photos in Brim on this device with the backup.',
+      onOk: () => applyBackup(data)
+    });
+  }
+  $('openBackup').addEventListener('click', () => { showPage('backup'); $('drawerTitle').focus(); });
+  $('bkExport').addEventListener('click', exportBackup);
+  $('bkImport').addEventListener('click', () => $('bkFile').click());
+  $('bkFile').addEventListener('change', () => {
+    const f = $('bkFile').files && $('bkFile').files[0];
+    $('bkFile').value = '';
+    if (f) importBackup(f);
+  });
+
+  updateBadges();
+  if (signedIn()) { cloudEnsureProfile().catch(() => {}); cloudTick(true).catch(() => {}); }
+  startPolling();
+
+  // base goal
+  $('baseDown').addEventListener('click', () => setBaseGoal(baseGoalOn(todayKey()) - 500));
+  $('baseUp').addEventListener('click', () => setBaseGoal(baseGoalOn(todayKey()) + 500));
+  $('baseInput').addEventListener('change', () => {
+    const n = parseInt($('baseInput').value.replace(/[,\s]/g, ''), 10);
+    if (Number.isFinite(n) && n > 0) setBaseGoal(n); else $('baseInput').value = String(baseGoalOn(todayKey()));
+  });
+  $('baseInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('baseInput').blur(); } });
+
+  // special days and periods
+  function openEditor(id) {
+    const o = id ? state.overrides.find(x => x.id === id) : null;
+    edit = {
+      id: o ? o.id : null,
+      start: o ? o.start : todayKey(),
+      end: o ? o.end : todayKey(),
+      goal: o ? o.goal : baseGoalOn(todayKey()),
+      picking: false
+    };
+    editCal.setMonthOf(edit.start);
+    showPage('edit', o ? 'Edit goal' : 'Goal for certain days');
+    renderEditor();
+    $('drawerTitle').focus();
+  }
+  $('addOvr').addEventListener('click', () => openEditor(null));
+  $('ovrList').addEventListener('click', e => {
+    const b = e.target.closest('button.ovr');
+    if (b) openEditor(b.dataset.id);
+  });
+  $('editDown').addEventListener('click', () => { edit.goal = clampGoal(edit.goal - 500); $('editGoal').value = String(edit.goal); });
+  $('editUp').addEventListener('click', () => { edit.goal = clampGoal(edit.goal + 500); $('editGoal').value = String(edit.goal); });
+  $('editGoal').addEventListener('change', () => {
+    const n = parseInt($('editGoal').value.replace(/[,\s]/g, ''), 10);
+    if (Number.isFinite(n) && n > 0) edit.goal = clampGoal(n);
+    $('editGoal').value = String(edit.goal);
+  });
+  $('editGoal').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('editGoal').blur(); } });
+  $('saveOvr').addEventListener('click', () => {
+    const n = parseInt($('editGoal').value.replace(/[,\s]/g, ''), 10);
+    if (Number.isFinite(n) && n > 0) edit.goal = clampGoal(n);
+    if (edit.id) {
+      const o = state.overrides.find(x => x.id === edit.id);
+      if (o) { o.start = edit.start; o.end = edit.end; o.goal = edit.goal; }
+    } else {
+      state.overrides.push({ id: 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), start: edit.start, end: edit.end, goal: edit.goal });
+    }
+    persist();
+    renderAll();
+    showPage('goals');
+    $('drawerTitle').focus();
+    toast('Goal saved');
+  });
+  $('delOvr').addEventListener('click', () => {
+    const btn = $('delOvr');
+    if (!delArmed) {
+      delArmed = true;
+      btn.textContent = 'Tap again to delete';
+      clearTimeout(delArmTimer);
+      delArmTimer = setTimeout(() => { delArmed = false; btn.textContent = 'Delete'; }, 3000);
+      return;
+    }
+    clearTimeout(delArmTimer);
+    state.overrides = state.overrides.filter(x => x.id !== edit.id);
+    persist();
+    renderAll();
+    showPage('goals');
+    $('drawerTitle').focus();
+    toast('Goal deleted');
+  });
+
+  /* ---------- day rollover ---------- */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    const t = todayKey();
+    if (t !== lastToday) {
+      if (viewKey === lastToday) viewKey = t;
+      lastToday = t;
+      mainCal.setMonthOf(viewKey);
+      renderAll();
+    }
+  });
+
+  /* ---------- go ---------- */
+  mainCal.setMonthOf(viewKey);
+  renderAll();
+  loadPhotos();
+})();
+</script>
+</body>
+</html>

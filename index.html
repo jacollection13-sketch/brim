@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="config.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -555,6 +556,25 @@
   .shd-card .bar > i { background: linear-gradient(90deg, var(--dia-l), var(--dia-d)); }
   .okline { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
 
+  .friend-list { display: grid; gap: 8px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: linear-gradient(145deg, var(--dia-l), var(--dia-d)); color: #14283A;
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 18px;
+  }
+  .friend, .frow {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; width: 100%;
+    border: 1.5px solid var(--line); background: var(--surface); text-align: left;
+  }
+  .friend { background: transparent; }
+  .friend[aria-checked="true"] { border-color: var(--btn-bg); box-shadow: inset 0 0 0 1.5px var(--btn-bg); }
+  .finfo { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; flex: 1; }
+  .finfo strong { font-size: 15.5px; overflow-wrap: anywhere; }
+  .finfo small { font-size: 13px; color: var(--muted); }
+  .facts { display: flex; gap: 6px; margin-left: auto; flex: none; }
+  .btn.sm { height: 38px; padding: 0 12px; font-size: 14px; border-radius: 12px; }
+  .facts .trash { width: 38px; height: 38px; border-radius: 12px; }
+
   @media (prefers-reduced-motion: reduce) {
     .slosh, .splash, .bubble, .ripple, .drop, .ring, .sweep, .spark, .glint, .coin-float, .hero.done::before { animation: none !important; }
     .dlg, .dlg.open, .w-body, .w-top, .toast, .scrim, .drawer, .drawer.open, .scrim2, .sheet, .sheet.open { transition: none; }
@@ -669,14 +689,6 @@
         <span class="sv-sub" id="svSub"></span>
       </button>
 
-      <div class="log">
-        <label class="lbl" for="stepsInput" id="logLabel">Steps today</label>
-        <div class="row">
-          <input type="text" id="stepsInput" inputmode="numeric" autocomplete="off" placeholder="From the Health app">
-          <button class="btn" id="saveSteps" type="button">Save steps</button>
-        </div>
-        <p class="err" id="stepsErr" role="alert" hidden></p>
-      </div>
     </section>
 
     <!-- Progress photo view -->
@@ -837,6 +849,13 @@
           </button>
         </li>
         <li>
+          <button class="menu-item" id="openSteps" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="11" rx="3" ry="4"/><ellipse cx="8" cy="19" rx="2.2" ry="2"/><ellipse cx="16" cy="7" rx="3" ry="4"/><ellipse cx="16" cy="14.5" rx="2.2" ry="2"/></svg></span>
+            <span class="mi-text"><strong>Enter steps manually</strong><small>Add or correct a day's steps</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
           <button class="menu-item" id="openRewards" type="button">
             <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12M12 8v13"/><path d="M12 8C10 8 7.5 7.5 7.5 5.5 7.5 4.4 8.4 3.5 9.5 3.5 11 3.5 12 5.5 12 8zM12 8c2 0 4.5-.5 4.5-2.5 0-1.1-.9-2-2-2C13 3.5 12 5.5 12 8z"/></svg></span>
             <span class="mi-text"><strong>Rewards</strong><small>Choose what your points can buy</small></span>
@@ -847,6 +866,14 @@
           <button class="menu-item" id="openShare" type="button">
             <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.6-3.6 3.4-5.6 7-5.6s6.4 2 7 5.6"/></svg></span>
             <span class="mi-text"><strong>Profile and sharing</strong><small>Your name, and sharing a day with someone</small></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </li>
+        <li>
+          <button class="menu-item" id="openFriends" type="button">
+            <span class="mi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19c.5-3.2 3-5 6-5s5.5 1.8 6 5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.5 14.2c2.4.2 4 1.7 4.5 4.3"/></svg></span>
+            <span class="mi-text"><strong>Friends</strong><small>Add friends and accept requests</small></span>
+            <span class="count" id="friendCount" hidden></span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
           </button>
         </li>
@@ -969,13 +996,11 @@
 
       <div id="sendIn" hidden>
         <h3 style="margin-top:26px">Send in Brim</h3>
-        <p class="sub">Send this card to another Brim user. It appears under Shared with me on their phone.</p>
-        <label class="lbl" for="sendCode">Their friend code</label>
-        <div class="row">
-          <input type="text" id="sendCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sam-4f2k">
-          <button class="btn" id="sendGo" type="button">Send</button>
-        </div>
-        <div class="chips" id="sendContacts" style="justify-content:flex-start;margin-top:10px"></div>
+        <p class="sub">Pick a friend. The card appears under Shared with me on their phone.</p>
+        <div class="friend-list" id="sendFriends" role="radiogroup" aria-label="Send to"></div>
+        <p class="hint" id="sendNone" hidden>You haven't added any friends yet.</p>
+        <button class="btn ghost wide" id="sendAdd" type="button" hidden style="margin-top:10px">Add a friend</button>
+        <button class="btn wide" id="sendGo" type="button" disabled style="margin-top:14px">Send</button>
         <p class="err" id="sendErr" role="alert" hidden></p>
       </div>
       <p class="hint" id="sendHint" hidden>To send cards inside Brim, set up Cloud sync first (Settings, Cloud sync and Health).</p>
@@ -1075,6 +1100,46 @@
       <button class="btn ghost wide" id="bkImport" type="button">Choose a backup file</button>
       <input type="file" id="bkFile" accept=".json,application/json" hidden>
       <p class="err" id="bkErr" role="alert" hidden></p>
+    </div>
+
+    <div class="dpage" id="dp-steps" hidden>
+      <p class="sub">Steps from your Health shortcut arrive on their own. Use this page to add or correct a day yourself.</p>
+      <div class="share-day">
+        <button class="icon-btn" id="msPrev" type="button" aria-label="Previous day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="sd-label" aria-live="polite"><strong id="msDay"></strong><small id="msRel"></small></div>
+        <button class="icon-btn" id="msNext" type="button" aria-label="Next day">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <p class="okline" id="msSrc" style="text-align:center"></p>
+      <label class="lbl gap-top" for="stepsInput">Steps for this day</label>
+      <div class="row">
+        <input type="text" id="stepsInput" inputmode="numeric" autocomplete="off" placeholder="0">
+        <button class="btn" id="saveSteps" type="button">Save</button>
+      </div>
+      <p class="err" id="stepsErr" role="alert" hidden></p>
+    </div>
+
+    <div class="dpage" id="dp-friends" hidden>
+      <p class="sub" id="frNeed" hidden>Set up Cloud sync first (Settings, Cloud sync and Health) to add friends.</p>
+      <div id="frAddBox">
+        <label class="lbl" for="frMyCode">Your friend code</label>
+        <div class="copyrow"><input type="text" id="frMyCode" readonly><button class="btn ghost" type="button" data-copy="frMyCode">Copy</button></div>
+        <label class="lbl gap-top" for="frCode">Add a friend</label>
+        <div class="row">
+          <input type="text" id="frCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Their friend code">
+          <button class="btn" id="frAdd" type="button">Add</button>
+        </div>
+        <p class="err" id="frErr" role="alert" hidden></p>
+        <p class="hint" style="margin-top:10px">They get a request and can accept it in Brim. Once they do, you can send each other cards.</p>
+      </div>
+      <div id="frReqSec" hidden><h3 style="margin-top:24px">Requests</h3><div class="friend-list" id="frReqList" style="margin-top:10px"></div></div>
+      <h3 style="margin-top:24px">Friends</h3>
+      <p class="empty" id="frEmpty" style="margin-top:8px">No friends yet. Add one with their friend code.</p>
+      <div class="friend-list" id="frList" style="margin-top:10px"></div>
+      <div id="frOutSec" hidden><h3 style="margin-top:24px">Waiting for a reply</h3><div class="friend-list" id="frOutList" style="margin-top:10px"></div></div>
     </div>
 
     <div class="dpage" id="dp-units" hidden>
@@ -1563,7 +1628,7 @@
       return over > 0 ? `Goal reached, ${nf.format(over)} over. +100 points.` : 'Goal reached. +100 points.';
     }
     if (k > todayKey()) return 'This day is still ahead.';
-    if (!steps) return isToday ? 'Nothing logged yet. Add your steps below.' : 'No steps logged for this day.';
+    if (!steps) return isToday ? 'No steps yet today.' : 'No steps logged for this day.';
     if (!isToday) return `Finished at ${Math.round(steps / goal * 100)}% of the goal.`;
     return `${nf.format(goal - steps)} steps to go.`;
   }
@@ -1737,17 +1802,6 @@
   }
   hero.addEventListener('animationend', e => { if (e.target === hero) hero.classList.remove('pop'); });
 
-  function renderLog() {
-    const k = viewKey, isToday = k === todayKey();
-    $('logLabel').textContent = isToday ? 'Steps today' : 'Steps for ' + fmtShort(k);
-    const s = stepsOf(k);
-    $('stepsInput').value = s > 0 ? String(s) : '';
-    $('stepsErr').hidden = true;
-    const future = k > todayKey();
-    $('stepsInput').disabled = future;
-    $('saveSteps').disabled = future;
-  }
-
   function renderPhoto() {
     const k = viewKey, ph = photos.get(k), has = !!ph;
     $('photoDay').textContent = fmtLong(k);
@@ -1823,7 +1877,7 @@
   }
 
   function renderAll() {
-    renderNav(); renderHero(false); renderLog(); renderPhoto(); renderPhotoStrip(); renderCompare();
+    renderNav(); renderHero(false); renderPhoto(); renderPhotoStrip(); renderCompare();
     mainCal.render(); renderDayCard(); renderWork(); renderStats(); renderRewards();
   }
 
@@ -2523,29 +2577,47 @@
   }
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
 
-  /* ---------- steps actions ---------- */
+  /* ---------- manual steps (Settings) ---------- */
+  let manualDay = todayKey(), pendingHero = false;
+  function renderManual() {
+    const k = manualDay, s = stepsOf(k), cur = state.days[k];
+    $('msDay').textContent = fmtLong(k);
+    $('msRel').textContent = relLabel(k);
+    $('msNext').disabled = k >= todayKey();
+    $('stepsInput').value = s > 0 ? String(s) : '';
+    $('stepsErr').hidden = true;
+    $('msSrc').textContent = s > 0 ? (cur && cur.src === 'health' ? 'This number came from Health.' : 'This number was typed in.') : 'Nothing is logged for this day.';
+  }
   function saveSteps() {
     const raw = $('stepsInput').value.replace(/[,\s]/g, '');
     const err = $('stepsErr');
+    const k = manualDay;
+    if (k > todayKey()) { err.textContent = 'That day is still ahead.'; err.hidden = false; return; }
     if (!/^\d{1,6}$/.test(raw)) {
       err.textContent = 'Enter your step count as a whole number, like 6200.';
       err.hidden = false;
       return;
     }
     err.hidden = true;
-    const hadHit = dayHit(viewKey);
-    state.days[viewKey] = { steps: parseInt(raw, 10), ts: Date.now(), src: 'manual' };
+    const hadHit = dayHit(k);
+    state.days[k] = { steps: parseInt(raw, 10), ts: Date.now(), src: 'manual' };
     persist();
-    renderHero(true); renderPhotoStrip(); mainCal.render(); renderDayCard(); renderRewards();
-    toast(!hadHit && dayHit(viewKey) ? 'Steps saved, +100 points earned' : 'Steps saved');
+    renderPhotoStrip(); mainCal.render(); renderDayCard(); renderRewards();
+    if ($('drawer').classList.contains('open')) { if (k === viewKey) pendingHero = true; }
+    else renderHero(k === viewKey && k === todayKey());
+    $('msSrc').textContent = 'This number was typed in.';
+    toast(!hadHit && dayHit(k) ? 'Steps saved, +100 points earned' : 'Steps saved');
   }
   $('saveSteps').addEventListener('click', saveSteps);
   $('stepsInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveSteps(); } });
+  $('msPrev').addEventListener('click', () => { manualDay = shiftKey(manualDay, -1); renderManual(); });
+  $('msNext').addEventListener('click', () => { if (manualDay < todayKey()) { manualDay = shiftKey(manualDay, 1); renderManual(); } });
+  $('openSteps').addEventListener('click', () => { manualDay = viewKey; showPage('steps'); $('drawerTitle').focus(); });
 
   /* ---------- header + calendar events ---------- */
   $('prevDay').addEventListener('click', () => goTo(shiftKey(viewKey, -1)));
   $('nextDay').addEventListener('click', () => { if (viewKey < todayKey()) goTo(shiftKey(viewKey, 1)); });
-  $('dcEdit').addEventListener('click', () => setView('steps'));
+  $('dcEdit').addEventListener('click', () => { openDrawer(); manualDay = viewKey; showPage('steps'); $('drawerTitle').focus(); });
   $('dcPhoto').addEventListener('click', () => setView('photo'));
   $('dcWorkBtn').addEventListener('click', () => setView('work'));
   $('photoStrip').addEventListener('click', e => {
@@ -2596,11 +2668,11 @@
   /* ---------- settings drawer ---------- */
   const drawer = $('drawer'), scrim = $('scrim');
   let drawerPage = 'menu';
-  const PAGE_TITLES = { menu: 'Settings', goals: 'Step goals', edit: 'Goal for certain days', units: 'Units', rewards: 'Rewards', reward: 'Reward', share: 'Profile and sharing', cloud: 'Cloud sync and Health', inbox: 'Shared with me', shared: 'Shared card', backup: 'Backup and restore' };
+  const PAGE_TITLES = { menu: 'Settings', goals: 'Step goals', edit: 'Goal for certain days', units: 'Units', rewards: 'Rewards', reward: 'Reward', share: 'Profile and sharing', cloud: 'Cloud sync and Health', inbox: 'Shared with me', shared: 'Shared card', backup: 'Backup and restore', steps: 'Enter steps manually', friends: 'Friends' };
 
   function showPage(name, title) {
     drawerPage = name;
-    ['menu', 'goals', 'edit', 'units', 'rewards', 'reward', 'share', 'cloud', 'inbox', 'shared', 'backup'].forEach(n => { $('dp-' + n).hidden = n !== name; });
+    ['menu', 'goals', 'edit', 'units', 'rewards', 'reward', 'share', 'cloud', 'inbox', 'shared', 'backup', 'steps', 'friends'].forEach(n => { $('dp-' + n).hidden = n !== name; });
     $('drawerTitle').textContent = title || PAGE_TITLES[name];
     $('drawerBack').hidden = name === 'menu';
     $('drawerBody').scrollTop = 0;
@@ -2611,6 +2683,8 @@
     if (name === 'cloud') renderCloudPage();
     if (name === 'inbox') { renderInbox(); if (signedIn()) pullShares(false).catch(() => {}); }
     if (name === 'backup') $('bkErr').hidden = true;
+    if (name === 'steps') renderManual();
+    if (name === 'friends') { renderFriends(); if (signedIn()) pullFriends(false).catch(() => {}); }
   }
   function openDrawer() {
     showPage('menu');
@@ -2626,12 +2700,13 @@
     $('app').inert = false; $('tabbar').inert = false;
     document.body.style.overflow = '';
     $('openSettings').focus();
+    if (pendingHero) { pendingHero = false; renderHero(viewKey === todayKey()); }
   }
   function drawerBack() {
     if (drawerPage === 'edit') showPage('goals');
     else if (drawerPage === 'reward') showPage('rewards');
     else if (drawerPage === 'shared') showPage('inbox');
-    else if (['goals', 'units', 'rewards', 'share', 'cloud', 'inbox', 'backup'].includes(drawerPage)) showPage('menu');
+    else if (['goals', 'units', 'rewards', 'share', 'cloud', 'inbox', 'backup', 'steps', 'friends'].includes(drawerPage)) showPage('menu');
     $('drawerTitle').focus();
   }
   $('openSettings').addEventListener('click', openDrawer);
@@ -2743,7 +2818,7 @@
   $('delReward').addEventListener('click', () => { if (rw.id) confirmDeleteReward(rw.id); });
 
   /* ---------- profile + sharing ---------- */
-  const share = { day: todayKey(), inc: { steps: true, workouts: true, photo: true }, blob: null, text: '', url: null, ver: 0, timer: 0 };
+  const share = { day: todayKey(), inc: { steps: true, workouts: true, photo: true }, blob: null, text: '', url: null, ver: 0, timer: 0, to: '' };
   const shareAvail = k => ({ steps: stepsOf(k) > 0, workouts: (state.workouts[k] || []).length > 0, photo: photos.has(k) });
   function shareEff(k) {
     const a = shareAvail(k);
@@ -3024,11 +3099,12 @@
   $('shGo').addEventListener('click', doShare);
 
   /* ---------- cloud sync (Supabase) ---------- */
-  // Hosting Brim yourself? You can paste your Supabase project URL and public key here once,
-  // or leave these empty and enter them in the app (Settings, Cloud sync and Health).
-  const BRIM_PRESET = { url: 'https://zdseinguproewbvavznc.supabase.co', anon: 'sb_publishable_CKJZb8I2QSiuL-4jWVKxEA_XQD3hO1e' };
+  // Hosting Brim yourself? Put your Supabase project URL and public key in config.js (next to index.html),
+  // or leave them empty and enter them in the app (Settings, Cloud sync and Health).
+  const BRIM_CFG = (typeof window !== 'undefined' && window.BRIM_CONFIG) || {};
+  const BRIM_PRESET = { url: String(BRIM_CFG.url || '').trim().replace(/\/+$/, ''), anon: String(BRIM_CFG.anon || '').trim() };
   const CLOUD_KEY = 'brim:cloud:v1';
-  const cloud = { url: BRIM_PRESET.url, anon: BRIM_PRESET.anon, session: null, profile: null, contacts: [], inbox: [], sent: [], lastSync: 0, status: '' };
+  const cloud = { url: BRIM_PRESET.url, anon: BRIM_PRESET.anon, session: null, profile: null, contacts: [], inbox: [], sent: [], friends: [], lastSync: 0, status: '' };
   try {
     const c = JSON.parse(localStorage.getItem(CLOUD_KEY) || 'null');
     if (c && typeof c === 'object') {
@@ -3151,11 +3227,28 @@
   /* shared cards */
   const SHARE_COLS = 'id,from_name,from_handle,to_name,to_handle,day,payload,created_at,read_at,has_photo';
   const unreadCount = () => cloud.inbox.filter(s => !s.read_at).length;
+  const friendList = () => cloud.friends.filter(f => f.direction === 'friend');
+  const incomingReq = () => cloud.friends.filter(f => f.direction === 'incoming');
+  const outgoingReq = () => cloud.friends.filter(f => f.direction === 'outgoing');
   function updateBadges() {
-    const n = signedIn() ? unreadCount() : 0;
-    $('gearBadge').hidden = n === 0;
+    const n = signedIn() ? unreadCount() : 0, r = signedIn() ? incomingReq().length : 0;
+    $('gearBadge').hidden = n + r === 0;
     $('inboxCount').hidden = n === 0;
     $('inboxCount').textContent = n ? `${n} new` : '';
+    $('friendCount').hidden = r === 0;
+    $('friendCount').textContent = r ? `${r} new` : '';
+  }
+  async function pullFriends(notify) {
+    if (!signedIn()) return;
+    const before = new Set(incomingReq().map(f => f.friendship_id));
+    const rows = await sbFetch('/rest/v1/rpc/list_friends', { method: 'POST', body: {} });
+    cloud.friends = Array.isArray(rows) ? rows : [];
+    if (share.to && !friendList().some(f => f.friend_id === share.to)) share.to = '';
+    const fresh = incomingReq().filter(f => !before.has(f.friendship_id));
+    if (notify && fresh.length) toast(fresh.length === 1 ? `${fresh[0].name || fresh[0].handle} sent you a friend request` : `${fresh.length} new friend requests`);
+    updateBadges();
+    if (drawerPage === 'friends') renderFriends();
+    if (drawerPage === 'share') renderSendSection();
   }
   async function pullShares(notify) {
     if (!signedIn()) return;
@@ -3177,6 +3270,7 @@
     if (!signedIn()) return 0;
     try {
       const n = await pullSteps();
+      await pullFriends(!initial);
       await pullShares(!initial);
       cloud.lastSync = Date.now();
       cloud.status = '';
@@ -3287,11 +3381,11 @@
     askConfirm({
       title: 'Use a different project?', name: 'Forget this Supabase project', okLabel: 'Forget it', danger: true,
       body: "Brim forgets the project address and key on this device. Your steps, workouts and photos stay here.",
-      onOk: () => { if (!BRIM_PRESET.url) { cloud.url = ''; cloud.anon = ''; } cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloudSave(); updateBadges(); renderCloudPage(); }
+      onOk: () => { if (!BRIM_PRESET.url) { cloud.url = ''; cloud.anon = ''; } cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloud.friends = []; share.to = ''; cloudSave(); updateBadges(); renderCloudPage(); }
     });
   });
   $('signOut').addEventListener('click', () => {
-    cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloud.lastSync = 0;
+    cloud.session = null; cloud.profile = null; cloud.inbox = []; cloud.sent = []; cloud.friends = []; share.to = ''; cloud.lastSync = 0;
     cloudSave(); updateBadges(); renderCloudPage(); toast('Signed out');
   });
   $('syncNow').addEventListener('click', async () => {
@@ -3316,19 +3410,136 @@
     toast(ok ? 'Copied' : "Couldn't copy. Press and hold the text to copy it.");
   });
 
+  /* friends */
+  const initialOf = name => (String(name || '?').trim()[0] || '?').toUpperCase();
+  function avatarEl(name) {
+    const a = document.createElement('span');
+    a.className = 'avatar'; a.textContent = initialOf(name); a.setAttribute('aria-hidden', 'true');
+    return a;
+  }
+  function friendRow(f, actions) {
+    const row = document.createElement('div');
+    row.className = 'frow';
+    const info = document.createElement('div'); info.className = 'finfo';
+    const nm = document.createElement('strong'); nm.textContent = f.name || f.handle;
+    const hd = document.createElement('small'); hd.textContent = f.handle;
+    info.append(nm, hd);
+    const acts = document.createElement('div'); acts.className = 'facts';
+    actions.forEach(a => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.act = a.act; b.dataset.id = f.friendship_id; b.dataset.uid = f.friend_id;
+      b.className = a.cls; b.textContent = a.label || '';
+      if (a.html) b.innerHTML = a.html;
+      b.setAttribute('aria-label', `${a.aria} ${f.name || f.handle}`);
+      acts.appendChild(b);
+    });
+    row.append(avatarEl(f.name), info, acts);
+    return row;
+  }
+  const TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5A.5.5 0 0 1 9.5 4h5a.5.5 0 0 1 .5.5V7"/></svg>';
+  function renderFriends() {
+    const inn = signedIn();
+    $('frNeed').hidden = inn;
+    $('frAddBox').hidden = !inn;
+    if (!inn) {
+      ['frReqSec', 'frOutSec'].forEach(id => { $(id).hidden = true; });
+      $('frEmpty').hidden = true; $('frList').replaceChildren();
+      return;
+    }
+    $('frMyCode').value = cloud.profile ? cloud.profile.handle : '';
+    const reqs = incomingReq(), fr = friendList(), out = outgoingReq();
+    $('frReqSec').hidden = reqs.length === 0;
+    $('frReqList').replaceChildren(...reqs.map(f => friendRow(f, [
+      { act: 'accept', cls: 'btn sm', label: 'Accept', aria: 'Accept request from' },
+      { act: 'decline', cls: 'btn ghost sm', label: 'Decline', aria: 'Decline request from' }
+    ])));
+    $('frEmpty').hidden = fr.length > 0;
+    $('frList').replaceChildren(...fr.map(f => friendRow(f, [
+      { act: 'send', cls: 'btn ghost sm', label: 'Send a card', aria: 'Send a card to' },
+      { act: 'remove', cls: 'trash', html: TRASH_ICON, aria: 'Remove friend' }
+    ])));
+    $('frOutSec').hidden = out.length === 0;
+    $('frOutList').replaceChildren(...out.map(f => friendRow(f, [
+      { act: 'cancel', cls: 'btn ghost sm', label: 'Cancel', aria: 'Cancel request to' }
+    ])));
+  }
+  async function addFriend() {
+    const code = $('frCode').value.trim().toLowerCase(), err = $('frErr');
+    if (!code) { err.textContent = "Enter your friend's code."; err.hidden = false; return; }
+    err.hidden = true;
+    $('frAdd').disabled = true;
+    try {
+      const r = await sbFetch('/rest/v1/rpc/add_friend', { method: 'POST', body: { p_handle: code } });
+      const nm = (r && (r.name || r.handle)) || 'them';
+      $('frCode').value = '';
+      toast(r && r.status === 'friends' ? `You and ${nm} are friends` : (r && r.status === 'pending' ? `Still waiting for ${nm} to accept` : `Request sent to ${nm}`));
+      await pullFriends(false);
+    } catch (e) { err.textContent = e.message; err.hidden = false; }
+    finally { $('frAdd').disabled = false; }
+  }
+  async function friendAction(act, id, uid) {
+    const f = cloud.friends.find(x => x.friendship_id === id);
+    const nm = f ? (f.name || f.handle) : 'them';
+    try {
+      if (act === 'accept' || act === 'decline') {
+        await sbFetch('/rest/v1/rpc/respond_friend', { method: 'POST', body: { p_id: id, p_accept: act === 'accept' } });
+        await pullFriends(false);
+        toast(act === 'accept' ? `You and ${nm} are friends` : 'Request declined');
+      } else if (act === 'cancel') {
+        await sbFetch('/rest/v1/rpc/remove_friendship', { method: 'POST', body: { p_id: id } });
+        await pullFriends(false);
+        toast('Request cancelled');
+      } else if (act === 'remove') {
+        askConfirm({
+          title: 'Remove this friend?', name: nm, okLabel: 'Remove', danger: true,
+          body: "You won't be able to send each other cards until you add each other again. Cards you already sent stay where they are.",
+          onOk: async () => {
+            try {
+              await sbFetch('/rest/v1/rpc/remove_friendship', { method: 'POST', body: { p_id: id } });
+              await pullFriends(false);
+              toast('Friend removed');
+            } catch (e) { toast(e.message); }
+          }
+        });
+      } else if (act === 'send') {
+        share.to = uid; share.day = viewKey;
+        showPage('share');
+        $('drawerTitle').focus();
+      }
+    } catch (e) { toast(e.message); }
+  }
+  $('openFriends').addEventListener('click', () => { showPage('friends'); $('drawerTitle').focus(); });
+  $('frAdd').addEventListener('click', addFriend);
+  $('frCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addFriend(); } });
+  $('dp-friends').addEventListener('click', async e => {
+    const c = e.target.closest('button[data-copy]');
+    if (c) { const ok = await copyText($(c.dataset.copy).value); toast(ok ? 'Copied' : "Couldn't copy. Press and hold the text to copy it."); return; }
+    const b = e.target.closest('button[data-act]');
+    if (b) friendAction(b.dataset.act, b.dataset.id, b.dataset.uid);
+  });
+
   /* sending a card inside Brim */
   function renderSendSection() {
     const on = signedIn();
     $('sendIn').hidden = !on;
     $('sendHint').hidden = on;
     $('myCode').hidden = !(on && cloud.profile);
-    if (on && cloud.profile) $('myCode').textContent = `Your friend code is ${cloud.profile.handle}. Other users need it to send you cards.`;
-    $('sendContacts').replaceChildren(...cloud.contacts.map(c => {
+    if (on && cloud.profile) $('myCode').textContent = `Your friend code is ${cloud.profile.handle}. Friends use it to add you.`;
+    const fr = friendList();
+    $('sendFriends').replaceChildren(...fr.map(f => {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip'; b.dataset.handle = c.handle;
-      b.textContent = c.name || c.handle;
+      b.type = 'button'; b.className = 'friend'; b.dataset.uid = f.friend_id;
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', String(share.to === f.friend_id));
+      const info = document.createElement('span'); info.className = 'finfo';
+      const nm = document.createElement('strong'); nm.textContent = f.name || f.handle;
+      info.appendChild(nm);
+      b.append(avatarEl(f.name), info);
       return b;
     }));
+    $('sendNone').hidden = fr.length > 0;
+    $('sendAdd').hidden = fr.length > 0;
+    $('sendGo').disabled = !share.to;
   }
   async function compressForShare(blob) {
     const bmp = await createImageBitmap(blob);
@@ -3342,8 +3553,7 @@
   async function sendInBrim() {
     const k = share.day, eff = shareEff(k), err = $('sendErr');
     const fail = m => { err.textContent = m; err.hidden = false; };
-    const code = $('sendCode').value.trim().toLowerCase();
-    if (!code) return fail("Enter your friend's code.");
+    if (!share.to) return fail('Pick a friend to send to.');
     if (!(eff.steps || eff.workouts || eff.photo)) return fail('Pick at least one thing to include.');
     err.hidden = true;
     $('sendGo').disabled = true;
@@ -3354,22 +3564,21 @@
         lines: eff.workouts ? workoutLines(k) : []
       };
       const photo = eff.photo && photos.get(k) ? await compressForShare(photos.get(k).full) : null;
-      const r = await sbFetch('/rest/v1/rpc/send_share', { method: 'POST', body: { p_handle: code, p_day: k, p_payload: payload, p_photo: photo } });
-      const nm = (r && r.to_name) || code;
-      if (!cloud.contacts.some(c => c.handle === code)) { cloud.contacts.unshift({ handle: code, name: nm }); cloud.contacts = cloud.contacts.slice(0, 20); cloudSave(); }
-      renderSendSection();
-      $('sendCode').value = '';
-      toast(`Sent to ${nm}`);
+      const r = await sbFetch('/rest/v1/rpc/send_share', { method: 'POST', body: { p_to: share.to, p_day: k, p_payload: payload, p_photo: photo } });
+      toast(`Sent to ${(r && r.to_name) || 'your friend'}`);
       pullShares(false).catch(() => {});
     } catch (e) { fail(e.message); }
-    finally { $('sendGo').disabled = false; }
+    finally { $('sendGo').disabled = !share.to; }
   }
   $('sendGo').addEventListener('click', sendInBrim);
-  $('sendCode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendInBrim(); } });
-  $('sendContacts').addEventListener('click', e => {
-    const b = e.target.closest('button.chip');
-    if (b) $('sendCode').value = b.dataset.handle;
+  $('sendFriends').addEventListener('click', e => {
+    const b = e.target.closest('button.friend');
+    if (!b) return;
+    share.to = share.to === b.dataset.uid ? '' : b.dataset.uid;
+    $('sendErr').hidden = true;
+    renderSendSection();
   });
+  $('sendAdd').addEventListener('click', () => { showPage('friends'); $('drawerTitle').focus(); });
 
   /* inbox */
   let inboxTab = 'in', openedShare = null;

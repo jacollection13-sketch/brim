@@ -575,6 +575,10 @@
   .btn.sm { height: 38px; padding: 0 12px; font-size: 14px; border-radius: 12px; }
   .facts .trash { width: 38px; height: 38px; border-radius: 12px; }
 
+  .log-day { margin: 18px 0 0; font-size: 13.5px; font-weight: 600; color: var(--muted); font-family: "Figtree", system-ui, sans-serif; letter-spacing: 0; }
+  .hist .h-right { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; flex: none; }
+  .hist .h-left { font-size: 12.5px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+
   @media (prefers-reduced-motion: reduce) {
     .slosh, .splash, .bubble, .ripple, .drop, .ring, .sweep, .spark, .glint, .coin-float, .hero.done::before { animation: none !important; }
     .dlg, .dlg.open, .w-body, .w-top, .toast, .scrim, .drawer, .drawer.open, .scrim2, .sheet, .sheet.open { transition: none; }
@@ -787,9 +791,16 @@
       </div>
       <p class="pts-sub" id="ptsNext" style="margin-top:10px"></p>
       <div id="rwStore"></div>
-      <div class="block" id="rwHistSec" hidden>
-        <h3>Redeemed</h3>
-        <ul class="hist" id="rwHist"></ul>
+      <div class="block" id="rwHistSec">
+        <h3>History</h3>
+        <p class="sub" id="rwHistSum"></p>
+        <div class="seg" id="rwHistTabs" role="group" aria-label="History view">
+          <button type="button" data-t="buy" aria-pressed="true">Purchases</button>
+          <button type="button" data-t="all" aria-pressed="false">All points</button>
+        </div>
+        <p class="empty" id="rwLogEmpty" style="margin-top:16px" hidden></p>
+        <div id="rwLog" style="margin-top:6px"></div>
+        <button class="btn ghost wide" id="rwMore" type="button" hidden style="margin-top:12px">Show more</button>
       </div>
     </section>
   </main>
@@ -2444,19 +2455,80 @@
     if (armedBtn) armedBtn.focus(); else if (pinBtn) pinBtn.focus();
     focusPin = null;
 
-    const hist = [...state.redeemed].sort((a, b) => (b.day + String(b.ts)).localeCompare(a.day + String(a.ts)));
-    $('rwHistSec').hidden = hist.length === 0;
-    $('rwHist').replaceChildren(...hist.map(r => {
+    renderPointsLog();
+  }
+
+  /* points history: purchases, or every point earned and spent with the balance after each */
+  let logTab = 'buy', logLimit = 20;
+  function pointsLedger() {
+    const items = [], t = todayKey();
+    Object.keys(state.days).forEach(k => {
+      if (k <= t && dayHit(k)) items.push({ day: k, ts: 0, order: 0, type: 'earn', amount: POINTS_PER_DAY, steps: stepsOf(k), goal: goalOf(k) });
+    });
+    state.redeemed.forEach(r => items.push({ day: r.day, ts: r.ts || 0, order: 1, type: 'spend', amount: -r.cost, name: r.name, tier: r.tier }));
+    items.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : (a.order - b.order) || (a.ts - b.ts)));
+    let bal = 0;
+    items.forEach(it => { bal += it.amount; it.balance = bal; });
+    return items;
+  }
+  function logDayLabel(k) {
+    const y = parseKey(k).getFullYear();
+    return fmtLong(k) + (y !== new Date().getFullYear() ? ', ' + y : '');
+  }
+  function renderPointsLog() {
+    const ledger = pointsLedger();
+    const buys = ledger.filter(x => x.type === 'spend');
+    const spent = buys.reduce((a, b) => a - b.amount, 0);
+    $('rwHistSum').textContent = buys.length
+      ? `${buys.length} ${buys.length === 1 ? 'reward' : 'rewards'} redeemed for ${nf.format(spent)} points.`
+      : 'Rewards you redeem are listed here with the day.';
+    document.querySelectorAll('#rwHistTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === logTab)));
+    const list = (logTab === 'buy' ? buys : ledger).slice().reverse();
+    const empty = $('rwLogEmpty');
+    empty.hidden = list.length > 0;
+    empty.textContent = logTab === 'buy' ? 'Nothing redeemed yet.' : 'No points yet. Reach your step goal to earn 100.';
+    const shown = list.slice(0, logLimit);
+    const out = [];
+    let ul = null, curDay = '';
+    shown.forEach(it => {
+      if (it.day !== curDay) {
+        curDay = it.day;
+        const g = document.createElement('div'); g.className = 'log-group';
+        const h = document.createElement('h4'); h.className = 'log-day'; h.textContent = logDayLabel(it.day);
+        ul = document.createElement('ul'); ul.className = 'hist';
+        g.append(h, ul);
+        out.push(g);
+      }
       const li = document.createElement('li');
       const main = document.createElement('div'); main.className = 'h-main';
-      const s1 = document.createElement('strong'); s1.textContent = r.name;
-      const s2 = document.createElement('small'); s2.append(starsEl(rTier(r.tier).stars, true), document.createTextNode(fmtFull(r.day)));
-      main.append(s1, s2);
-      const c = document.createElement('span'); c.className = 'h-cost'; c.textContent = '\u2212' + nf.format(r.cost);
-      li.append(main, c);
-      return li;
-    }));
+      const st = document.createElement('strong');
+      const sm = document.createElement('small');
+      if (it.type === 'spend') {
+        st.textContent = it.name;
+        sm.append(starsEl(rTier(it.tier).stars, true));
+      } else {
+        st.textContent = 'Reached your goal';
+        sm.textContent = `${nf.format(it.steps)} of ${nf.format(it.goal)} steps`;
+      }
+      main.append(st, sm);
+      const right = document.createElement('div'); right.className = 'h-right';
+      const amt = document.createElement('span'); amt.className = 'h-cost';
+      amt.textContent = (it.amount < 0 ? '\u2212' : '+') + nf.format(Math.abs(it.amount));
+      const left = document.createElement('span'); left.className = 'h-left';
+      left.textContent = `${nf.format(Math.max(0, it.balance))} left`;
+      right.append(amt, left);
+      li.append(main, right);
+      li.setAttribute('aria-label', `${it.type === 'spend' ? 'Redeemed ' + it.name : 'Reached your goal'}, ${amt.textContent} points, ${logDayLabel(it.day)}`);
+      ul.appendChild(li);
+    });
+    $('rwLog').replaceChildren(...out);
+    $('rwMore').hidden = list.length <= logLimit;
   }
+  $('rwHistTabs').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b && b.dataset.t) { logTab = b.dataset.t; logLimit = 20; renderPointsLog(); }
+  });
+  $('rwMore').addEventListener('click', () => { logLimit += 20; renderPointsLog(); });
 
   function togglePin(id) {
     state.pinned = state.pinned === id ? null : id;

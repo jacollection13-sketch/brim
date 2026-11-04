@@ -47,6 +47,7 @@
     --viol-l: #B7ABF2;   --viol-d: #8473D9;
     --cf-viol: rgba(132, 115, 217, .40);
     --dia-l: #A8EDFF;    --dia-d: #36B1EC;
+    --teal-l: #8FE3D6;   --teal-d: #1BA596;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -579,6 +580,24 @@
   .hist .h-right { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; flex: none; }
   .hist .h-left { font-size: 12.5px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
 
+  .t-d { --l: var(--dia-l); --d: var(--dia-d); }
+  .t-f1 { --l: var(--teal-l); --d: var(--teal-d); }
+  .t-f2 { --l: var(--viol-l); --d: var(--viol-d); }
+  .gem { display: inline-flex; flex: none; }
+  .gem svg { width: 22px; height: 22px; fill: var(--dia-l); stroke: var(--dia-d); stroke-width: 1.5; stroke-linejoin: round; }
+  .rw-head .gem svg { width: 26px; height: 26px; }
+  .hist .gem svg, .ovr .gem svg { width: 15px; height: 15px; }
+  .tierpick .gem svg { width: 24px; height: 24px; }
+  .sv-top .gem svg { width: 20px; height: 20px; }
+  .fp-pill {
+    display: inline-grid; place-items: center; height: 22px; padding: 0 9px; border-radius: 11px; flex: none;
+    background: linear-gradient(145deg, var(--dia-l), var(--dia-d)); color: #14283A; font-weight: 800; font-size: 12px; letter-spacing: .02em;
+  }
+  .coin.fp { background: linear-gradient(145deg, var(--dia-l), var(--dia-d)); }
+  .coin-sm.fp { background: linear-gradient(145deg, var(--dia-l), var(--dia-d)); }
+  .store-seg { margin: 4px 0 6px; max-width: 260px; }
+  .store-seg button { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 16px; letter-spacing: .02em; }
+
   @media (prefers-reduced-motion: reduce) {
     .slosh, .splash, .bubble, .ripple, .drop, .ring, .sweep, .spark, .glint, .coin-float, .hero.done::before { animation: none !important; }
     .dlg, .dlg.open, .w-body, .w-top, .toast, .scrim, .drawer, .drawer.open, .scrim2, .sheet, .sheet.open { transition: none; }
@@ -683,7 +702,8 @@
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.9 3.4 5.5 5.6 5.5 10.5a5.5 5.5 0 0 1-11 0c0-2.2 1-3.6 2.2-4.9.3 1.4.9 2.2 1.8 2.7C10.2 8.4 10.6 5.3 12 2.5z"/></svg>
           <span id="chipStreakTxt"></span>
         </span>
-        <span class="chip"><span class="coin-sm" aria-hidden="true"></span><span id="chipPtsTxt">0 points</span></span>
+        <span class="chip"><span class="coin-sm" aria-hidden="true"></span><span id="chipPtsTxt">0 RP</span></span>
+        <span class="chip"><span class="coin-sm fp" aria-hidden="true"></span><span id="chipFpTxt">0 FP</span></span>
       </div>
 
       <button class="saving" id="saving" type="button" hidden>
@@ -778,8 +798,19 @@
 
     <!-- Rewards view -->
     <section id="view-rewards" aria-label="Rewards" hidden>
-      <h2>Rewards</h2>
-      <p class="sub">Every day you reach your step goal earns 100 points.</p>
+      <div class="page-head">
+        <div style="flex:1;min-width:0">
+          <h2>Rewards</h2>
+          <p class="sub">Reach your step goal each day to earn 100 RP and 100 FP.</p>
+        </div>
+        <button class="icon-btn" id="showPurchases" type="button" aria-label="Purchase history" title="Purchase history" style="flex:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        </button>
+      </div>
+      <div class="seg store-seg" id="storeTabs" role="group" aria-label="Reward store">
+        <button type="button" data-s="rp" aria-pressed="true">RP</button>
+        <button type="button" data-s="fp" aria-pressed="false">FP</button>
+      </div>
       <div class="pts">
         <div class="coin" id="coin" aria-hidden="true">0</div>
         <span class="coin-float" id="coinFloat" aria-hidden="true"></span>
@@ -791,17 +822,7 @@
       </div>
       <p class="pts-sub" id="ptsNext" style="margin-top:10px"></p>
       <div id="rwStore"></div>
-      <div class="block" id="rwHistSec">
-        <h3>History</h3>
-        <p class="sub" id="rwHistSum"></p>
-        <div class="seg" id="rwHistTabs" role="group" aria-label="History view">
-          <button type="button" data-t="buy" aria-pressed="true">Purchases</button>
-          <button type="button" data-t="all" aria-pressed="false">All points</button>
-        </div>
-        <p class="empty" id="rwLogEmpty" style="margin-top:16px" hidden></p>
-        <div id="rwLog" style="margin-top:6px"></div>
-        <button class="btn ghost wide" id="rwMore" type="button" hidden style="margin-top:12px">Show more</button>
-      </div>
+
     </section>
   </main>
 </div>
@@ -954,7 +975,7 @@
 
     <div class="dpage" id="dp-rewards" hidden>
       <h3>Your rewards</h3>
-      <p class="sub">Rewards are rated from 1 to 5 stars. More stars cost more points: 250, 500, 1,500, 3,000 or 5,000.</p>
+      <p class="sub">RP rewards are rated from 1 to 5 stars (250, 500, 1,500, 3,000 or 7,500), with a diamond tier at 20,000. FP rewards cost 250 or 500.</p>
       <ul class="ovr-list" id="rwList"></ul>
       <p class="empty" id="rwEmpty">No rewards yet.</p>
       <button class="btn wide" id="addReward" type="button">Add a reward</button>
@@ -963,6 +984,11 @@
     <div class="dpage" id="dp-reward" hidden>
       <label class="lbl" for="rwName">Reward</label>
       <input type="text" id="rwName" maxlength="60" autocomplete="off" placeholder="New running shoes">
+      <p class="lbl gap-top" id="rwStoreLbl">Store</p>
+      <div class="seg" id="rwStoreSeg" role="group" aria-labelledby="rwStoreLbl">
+        <button type="button" data-store="rp" aria-pressed="true">RP store</button>
+        <button type="button" data-store="fp" aria-pressed="false">FP store</button>
+      </div>
       <p class="lbl gap-top" id="rwTierLbl">Cost</p>
       <div class="tierpick" id="rwTiers" role="group" aria-labelledby="rwTierLbl"></div>
       <p class="lbl gap-top" id="rwOnceLbl">How often</p>
@@ -1153,6 +1179,17 @@
       <div id="frOutSec" hidden><h3 style="margin-top:24px">Waiting for a reply</h3><div class="friend-list" id="frOutList" style="margin-top:10px"></div></div>
     </div>
 
+    <div class="dpage" id="dp-history" hidden>
+      <p class="sub" id="rwHistSum"></p>
+      <div class="seg" id="rwHistTabs" role="group" aria-label="History view">
+        <button type="button" data-t="buy" aria-pressed="true">Redeemed</button>
+        <button type="button" data-t="all" aria-pressed="false">All points</button>
+      </div>
+      <p class="empty" id="rwLogEmpty" style="margin-top:16px" hidden></p>
+      <div id="rwLog" style="margin-top:6px"></div>
+      <button class="btn ghost wide" id="rwMore" type="button" hidden style="margin-top:12px">Show more</button>
+    </div>
+
     <div class="dpage" id="dp-units" hidden>
       <h3>Weight</h3>
       <div class="seg" role="group" aria-label="Weight unit">
@@ -1295,7 +1332,7 @@
           }
         }
         const LEG = { week: 'star2', month: 'star4', twomonth: 'star5' };
-        const okTier = t => LEG[t] || (/^star[1-5]$/.test(String(t)) ? t : null);
+        const okTier = t => LEG[t] || (/^(star[1-5]|diamond|fp250|fp500)$/.test(String(t)) ? t : null);
         const COST = { star1: 250, star2: 500, star3: 1500, star4: 3000, star5: 5000 };
         if (Array.isArray(p.rewards)) {
           state.rewards = p.rewards
@@ -1636,7 +1673,7 @@
     const isToday = k === todayKey();
     if (steps >= goal) {
       const over = steps - goal;
-      return over > 0 ? `Goal reached, ${nf.format(over)} over. +100 points.` : 'Goal reached. +100 points.';
+      return over > 0 ? `Goal reached, ${nf.format(over)} over. +100 RP and FP.` : 'Goal reached. +100 RP and FP.';
     }
     if (k > todayKey()) return 'This day is still ahead.';
     if (!steps) return isToday ? 'No steps yet today.' : 'No steps logged for this day.';
@@ -2298,28 +2335,55 @@
 
   /* ---------- rewards ---------- */
   const R_TIERS = [
-    { id: 'star1', stars: 1, cost: 250, cls: 't-s1' },
-    { id: 'star2', stars: 2, cost: 500, cls: 't-s2' },
-    { id: 'star3', stars: 3, cost: 1500, cls: 't-s3' },
-    { id: 'star4', stars: 4, cost: 3000, cls: 't-s4' },
-    { id: 'star5', stars: 5, cost: 5000, cls: 't-s5' }
+    { id: 'star1', store: 'rp', stars: 1, cost: 250, cls: 't-s1' },
+    { id: 'star2', store: 'rp', stars: 2, cost: 500, cls: 't-s2' },
+    { id: 'star3', store: 'rp', stars: 3, cost: 1500, cls: 't-s3' },
+    { id: 'star4', store: 'rp', stars: 4, cost: 3000, cls: 't-s4' },
+    { id: 'star5', store: 'rp', stars: 5, cost: 7500, cls: 't-s5' },
+    { id: 'diamond', store: 'rp', stars: 0, diamond: true, cost: 20000, cls: 't-d' },
+    { id: 'fp250', store: 'fp', stars: 0, cost: 250, cls: 't-f1' },
+    { id: 'fp500', store: 'fp', stars: 0, cost: 500, cls: 't-f2' }
   ];
   const POINTS_PER_DAY = 100;
   const R_LEGACY = { week: 'star2', month: 'star4', twomonth: 'star5' };
   const rTier = id => R_TIERS.find(t => t.id === (R_LEGACY[id] || id)) || R_TIERS[0];
+  const tiersOf = store => R_TIERS.filter(t => t.store === store);
+  const storeOf = r => rTier(r.tier).store;
+  const unit = store => (store === 'fp' ? 'FP' : 'RP');
   const starLabel = n => (n === 1 ? '1 star' : n + ' stars');
+  const tierLabel = t => (t.diamond ? 'Diamond' : t.store === 'fp' ? `${nf.format(t.cost)} FP` : starLabel(t.stars));
   const STAR_PATH = 'M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z';
+  const GEM_SVG = '<svg viewBox="0 0 24 24"><path d="M6.5 3.5h11L22 9.5 12 21 2 9.5z"/><path d="M2 9.5h20M9.5 3.5L7 9.5l5 11.5M14.5 3.5L17 9.5 12 21"/></svg>';
   const PIN_SVG = '<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6l-1 5.5 3 3.2V14H7v-1.8L10 9z"/><path d="M12 14v6.5"/></svg>';
-  function starsEl(n, labelled) {
+  function labelled(el, text, yes) {
+    if (yes) { el.setAttribute('role', 'img'); el.setAttribute('aria-label', text); } else el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+  function starsEl(n, isLabelled) {
     const wrap = document.createElement('span');
     wrap.className = 'stars';
-    if (labelled) { wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', starLabel(n)); }
-    else wrap.setAttribute('aria-hidden', 'true');
+    labelled(wrap, starLabel(n), isLabelled);
     let h = '';
     for (let i = 1; i <= 5; i++) h += `<svg viewBox="0 0 24 24" class="${i <= n ? 'on' : ''}"><path d="${STAR_PATH}"/></svg>`;
     wrap.innerHTML = h;
     return wrap;
   }
+  function gemEl(isLabelled) {
+    const w = document.createElement('span');
+    w.className = 'gem';
+    labelled(w, 'Diamond', isLabelled);
+    w.innerHTML = GEM_SVG;
+    return w;
+  }
+  function fpEl(isLabelled) {
+    const w = document.createElement('span');
+    w.className = 'fp-pill';
+    w.textContent = 'FP';
+    labelled(w, 'FP reward', isLabelled);
+    return w;
+  }
+  // stars for RP tiers, a diamond for the top RP tier, and a small FP tag for the FP store
+  const tierMark = (t, isLabelled) => (t.diamond ? gemEl(isLabelled) : t.store === 'fp' ? fpEl(isLabelled) : starsEl(t.stars, isLabelled));
   const dayHit = k => { const s = stepsOf(k); return s > 0 && s >= goalOf(k); };
   function pointsEarned() {
     let n = 0;
@@ -2327,8 +2391,8 @@
     for (const k in state.days) if (k <= t && dayHit(k)) n++;
     return n * POINTS_PER_DAY;
   }
-  const pointsSpent = () => state.redeemed.reduce((a, r) => a + r.cost, 0);
-  const pointsBalance = () => Math.max(0, pointsEarned() - pointsSpent());
+  const pointsSpent = store => state.redeemed.filter(r => rTier(r.tier).store === store).reduce((a, r) => a + r.cost, 0);
+  const pointsBalance = store => Math.max(0, pointsEarned() - pointsSpent(store));
   function currentStreak() {
     let k = todayKey();
     if (!dayHit(k)) k = shiftKey(k, -1);
@@ -2361,50 +2425,57 @@
     coinTween = requestAnimationFrame(step);
   }
 
+  let rewardStore = 'rp';
   function renderRewards() {
     if (state.pinned && !pinnedReward()) { state.pinned = null; persist(); }
-    const earned = pointsEarned(), spent = pointsSpent(), bal = pointsBalance();
+    const store = rewardStore, U = unit(store);
+    const earned = pointsEarned(), spent = pointsSpent(store), bal = pointsBalance(store);
+    const balRP = pointsBalance('rp'), balFP = pointsBalance('fp');
     const streak = currentStreak();
-    const pts = `${nf.format(bal)} ${bal === 1 ? 'point' : 'points'}`;
 
     // rewards page header
+    document.querySelectorAll('#storeTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === store)));
+    $('coin').classList.toggle('fp', store === 'fp');
     setCoin(bal);
-    $('ptsMain').textContent = pts + ' to spend';
+    $('ptsMain').textContent = `${nf.format(bal)} ${U} to spend`;
     $('ptsSub').textContent = `${nf.format(earned)} earned, ${nf.format(spent)} spent`;
     $('ptsStreak').textContent = streak > 0 ? `${streak}-day streak` : '';
     let next = null;
-    state.rewards.forEach(r => {
+    const mine = state.rewards.filter(r => storeOf(r) === store);
+    mine.forEach(r => {
       const c = rTier(r.tier).cost;
       if (c > bal && (!next || c < next.c)) next = { r, c };
     });
     $('ptsNext').textContent = next ? `Next up: ${next.r.name}, ${nf.format(next.c - bal)} to go.`
-      : (state.rewards.length ? 'Everything in your store is within reach.' : '');
+      : (mine.length ? 'Everything in this store is within reach.' : '');
 
-    // steps page: streak, points and the pinned reward
+    // steps page: streak, both balances and the pinned reward
     $('chipStreak').hidden = streak < 1;
     $('chipStreakTxt').textContent = `${streak}-day streak`;
-    $('chipPtsTxt').textContent = pts;
+    $('chipPtsTxt').textContent = `${nf.format(balRP)} RP`;
+    $('chipFpTxt').textContent = `${nf.format(balFP)} FP`;
     const pr = pinnedReward();
     $('saving').hidden = !pr;
     if (pr) {
-      const t = rTier(pr.tier);
+      const t = rTier(pr.tier), pu = unit(t.store), pb = pointsBalance(t.store);
       $('saving').className = 'saving ' + t.cls;
       $('svName').textContent = pr.name;
-      $('svStars').replaceChildren(starsEl(t.stars, true));
-      $('svFill').style.setProperty('--p', Math.min(100, bal / t.cost * 100) + '%');
-      $('svSub').textContent = bal >= t.cost ? 'Ready to redeem. Tap to open Rewards.' : `${nf.format(bal)} of ${nf.format(t.cost)} points, ${nf.format(t.cost - bal)} to go`;
+      $('svStars').replaceChildren(tierMark(t, true));
+      $('svFill').style.setProperty('--p', Math.min(100, pb / t.cost * 100) + '%');
+      $('svSub').textContent = pb >= t.cost ? 'Ready to redeem. Tap to open Rewards.' : `${nf.format(pb)} of ${nf.format(t.cost)} ${pu}, ${nf.format(t.cost - pb)} to go`;
     }
 
     // rewards page store
     let armedBtn = null, pinBtn = null;
     const out = [];
-    R_TIERS.forEach(t => {
+    tiersOf(store).forEach(t => {
       const sec = document.createElement('div');
       sec.className = 'rw-tier ' + t.cls;
       const head = document.createElement('div'); head.className = 'rw-head';
-      const h = document.createElement('h3'); h.appendChild(starsEl(t.stars, true));
-      const cost = document.createElement('span'); cost.className = 'rw-cost'; cost.textContent = `${nf.format(t.cost)} points`;
-      head.append(h, cost);
+      const h = document.createElement('h3');
+      if (t.store === 'fp') h.textContent = `${nf.format(t.cost)} points`; else h.appendChild(tierMark(t, true));
+      head.appendChild(h);
+      if (t.store !== 'fp') { const cost = document.createElement('span'); cost.className = 'rw-cost'; cost.textContent = `${nf.format(t.cost)} points`; head.appendChild(cost); }
       sec.appendChild(head);
       const list = state.rewards.filter(r => r.tier === t.id).sort((a, b) => a.name.localeCompare(b.name));
       if (!list.length) {
@@ -2436,7 +2507,7 @@
           const fill = document.createElement('i'); fill.style.setProperty('--p', Math.min(100, bal / t.cost * 100) + '%');
           bar.appendChild(fill);
           const txt = document.createElement('div'); txt.className = 'txt';
-          txt.textContent = ready ? 'Ready to redeem' : `${nf.format(bal)} of ${nf.format(t.cost)} points, ${nf.format(t.cost - bal)} to go`;
+          txt.textContent = ready ? 'Ready to redeem' : `${nf.format(bal)} of ${nf.format(t.cost)} ${U}, ${nf.format(t.cost - bal)} to go`;
           prog.append(bar, txt);
           card.appendChild(prog);
         }
@@ -2444,7 +2515,7 @@
         rb.type = 'button'; rb.className = 'btn rw-redeem'; rb.dataset.id = r.id; rb.textContent = 'Redeem';
         if (!ready) {
           rb.disabled = true;
-          rb.setAttribute('aria-label', `Redeem ${r.name}, ${nf.format(t.cost - bal)} more points needed`);
+          rb.setAttribute('aria-label', `Redeem ${r.name}, ${nf.format(t.cost - bal)} more ${U} needed`);
         }
         card.appendChild(rb);
         sec.appendChild(card);
@@ -2457,15 +2528,23 @@
 
     renderPointsLog();
   }
+  $('storeTabs').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.s || b.dataset.s === rewardStore) return;
+    rewardStore = b.dataset.s;
+    coinShown = null; coinTarget = null;
+    logLimit = 20;
+    renderRewards();
+  });
 
   /* points history: purchases, or every point earned and spent with the balance after each */
   let logTab = 'buy', logLimit = 20;
-  function pointsLedger() {
+  function pointsLedger(store) {
     const items = [], t = todayKey();
     Object.keys(state.days).forEach(k => {
       if (k <= t && dayHit(k)) items.push({ day: k, ts: 0, order: 0, type: 'earn', amount: POINTS_PER_DAY, steps: stepsOf(k), goal: goalOf(k) });
     });
-    state.redeemed.forEach(r => items.push({ day: r.day, ts: r.ts || 0, order: 1, type: 'spend', amount: -r.cost, name: r.name, tier: r.tier }));
+    state.redeemed.filter(r => rTier(r.tier).store === store).forEach(r => items.push({ day: r.day, ts: r.ts || 0, order: 1, type: 'spend', amount: -r.cost, name: r.name, tier: r.tier }));
     items.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : (a.order - b.order) || (a.ts - b.ts)));
     let bal = 0;
     items.forEach(it => { bal += it.amount; it.balance = bal; });
@@ -2476,17 +2555,17 @@
     return fmtLong(k) + (y !== new Date().getFullYear() ? ', ' + y : '');
   }
   function renderPointsLog() {
-    const ledger = pointsLedger();
+    const store = rewardStore, U = unit(store), ledger = pointsLedger(store);
     const buys = ledger.filter(x => x.type === 'spend');
     const spent = buys.reduce((a, b) => a - b.amount, 0);
     $('rwHistSum').textContent = buys.length
-      ? `${buys.length} ${buys.length === 1 ? 'reward' : 'rewards'} redeemed for ${nf.format(spent)} points.`
-      : 'Rewards you redeem are listed here with the day.';
+      ? `${buys.length} ${buys.length === 1 ? 'reward' : 'rewards'} redeemed for ${nf.format(spent)} ${U}.`
+      : `${U} rewards you redeem are listed here with the day.`;
     document.querySelectorAll('#rwHistTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === logTab)));
     const list = (logTab === 'buy' ? buys : ledger).slice().reverse();
     const empty = $('rwLogEmpty');
     empty.hidden = list.length > 0;
-    empty.textContent = logTab === 'buy' ? 'Nothing redeemed yet.' : 'No points yet. Reach your step goal to earn 100.';
+    empty.textContent = logTab === 'buy' ? 'Nothing redeemed yet.' : `No ${U} yet. Reach your step goal to earn 100.`;
     const shown = list.slice(0, logLimit);
     const out = [];
     let ul = null, curDay = '';
@@ -2505,7 +2584,7 @@
       const sm = document.createElement('small');
       if (it.type === 'spend') {
         st.textContent = it.name;
-        sm.append(starsEl(rTier(it.tier).stars, true));
+        sm.append(tierMark(rTier(it.tier), true));
       } else {
         st.textContent = 'Reached your goal';
         sm.textContent = `${nf.format(it.steps)} of ${nf.format(it.goal)} steps`;
@@ -2529,6 +2608,13 @@
     if (b && b.dataset.t) { logTab = b.dataset.t; logLimit = 20; renderPointsLog(); }
   });
   $('rwMore').addEventListener('click', () => { logLimit += 20; renderPointsLog(); });
+  $('showPurchases').addEventListener('click', () => {
+    openDrawer();
+    drawerEntry = 'history';
+    drawerReturn = $('showPurchases');
+    showPage('history', `${unit(rewardStore)} purchases`);
+    $('drawerTitle').focus();
+  });
 
   function togglePin(id) {
     state.pinned = state.pinned === id ? null : id;
@@ -2545,7 +2631,7 @@
     confirmCb = o.onOk;
     confirmOpener = document.activeElement;
     $('dlgTitle').textContent = o.title;
-    $('dlgStars').replaceChildren(...(o.stars ? [starsEl(o.stars, true)] : []));
+    $('dlgStars').replaceChildren(...(o.mark ? [o.mark] : []));
     $('dlgName').textContent = o.name;
     $('dlgBody').textContent = o.body;
     $('dlgOk').textContent = o.okLabel;
@@ -2574,11 +2660,11 @@
   function openRedeem(id) {
     const r = state.rewards.find(x => x.id === id);
     if (!r) return;
-    const t = rTier(r.tier), bal = pointsBalance();
+    const t = rTier(r.tier), bal = pointsBalance(t.store);
     if (bal < t.cost) return;
     askConfirm({
-      title: 'Redeem this reward?', stars: t.stars, name: r.name, okLabel: 'Redeem',
-      body: `This costs ${nf.format(t.cost)} points. Your balance goes from ${nf.format(bal)} to ${nf.format(bal - t.cost)}.` +
+      title: 'Redeem this reward?', mark: tierMark(t, true), name: r.name, okLabel: 'Redeem',
+      body: `This costs ${nf.format(t.cost)} ${unit(t.store)}. Your balance goes from ${nf.format(bal)} to ${nf.format(bal - t.cost)}.` +
         (r.once ? " It's a one-time reward, so it leaves your store afterwards." : ''),
       onOk: () => performRedeem(id)
     });
@@ -2586,8 +2672,8 @@
   function performRedeem(id) {
     const r = state.rewards.find(x => x.id === id);
     if (!r) return;
-    const cost = rTier(r.tier).cost;
-    if (pointsBalance() < cost) return;
+    const rt = rTier(r.tier), cost = rt.cost;
+    if (pointsBalance(rt.store) < cost) return;
     state.redeemed.push({ id: newId(), name: r.name, tier: r.tier, cost, day: todayKey(), ts: Date.now() });
     if (r.once) {
       state.rewards = state.rewards.filter(x => x.id !== r.id);
@@ -2615,7 +2701,7 @@
     const r = state.rewards.find(x => x.id === id);
     if (!r) return;
     askConfirm({
-      title: 'Delete this reward?', stars: rTier(r.tier).stars, name: r.name, okLabel: 'Delete', danger: true,
+      title: 'Delete this reward?', mark: tierMark(rTier(r.tier), true), name: r.name, okLabel: 'Delete', danger: true,
       body: "It leaves your store for good. Your points and past redemptions aren't affected.",
       onOk: () => deleteReward(id)
     });
@@ -2678,7 +2764,7 @@
     if ($('drawer').classList.contains('open')) { if (k === viewKey) pendingHero = true; }
     else renderHero(k === viewKey && k === todayKey());
     $('msSrc').textContent = 'This number was typed in.';
-    toast(!hadHit && dayHit(k) ? 'Steps saved, +100 points earned' : 'Steps saved');
+    toast(!hadHit && dayHit(k) ? 'Steps saved, +100 RP and FP earned' : 'Steps saved');
   }
   $('saveSteps').addEventListener('click', saveSteps);
   $('stepsInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveSteps(); } });
@@ -2739,14 +2825,14 @@
 
   /* ---------- settings drawer ---------- */
   const drawer = $('drawer'), scrim = $('scrim');
-  let drawerPage = 'menu';
-  const PAGE_TITLES = { menu: 'Settings', goals: 'Step goals', edit: 'Goal for certain days', units: 'Units', rewards: 'Rewards', reward: 'Reward', share: 'Profile and sharing', cloud: 'Cloud sync and Health', inbox: 'Shared with me', shared: 'Shared card', backup: 'Backup and restore', steps: 'Enter steps manually', friends: 'Friends' };
+  let drawerPage = 'menu', drawerEntry = 'menu', drawerReturn = null;
+  const PAGE_TITLES = { menu: 'Settings', goals: 'Step goals', edit: 'Goal for certain days', units: 'Units', rewards: 'Rewards', reward: 'Reward', share: 'Profile and sharing', cloud: 'Cloud sync and Health', inbox: 'Shared with me', shared: 'Shared card', backup: 'Backup and restore', steps: 'Enter steps manually', friends: 'Friends', history: 'Purchases' };
 
   function showPage(name, title) {
     drawerPage = name;
-    ['menu', 'goals', 'edit', 'units', 'rewards', 'reward', 'share', 'cloud', 'inbox', 'shared', 'backup', 'steps', 'friends'].forEach(n => { $('dp-' + n).hidden = n !== name; });
+    ['menu', 'goals', 'edit', 'units', 'rewards', 'reward', 'share', 'cloud', 'inbox', 'shared', 'backup', 'steps', 'friends', 'history'].forEach(n => { $('dp-' + n).hidden = n !== name; });
     $('drawerTitle').textContent = title || PAGE_TITLES[name];
-    $('drawerBack').hidden = name === 'menu';
+    $('drawerBack').hidden = name === 'menu' || name === drawerEntry;
     $('drawerBody').scrollTop = 0;
     if (name === 'goals') { $('baseInput').value = String(baseGoalOn(todayKey())); renderOvrList(); }
     if (name === 'units') renderUnits();
@@ -2757,6 +2843,7 @@
     if (name === 'backup') $('bkErr').hidden = true;
     if (name === 'steps') renderManual();
     if (name === 'friends') { renderFriends(); if (signedIn()) pullFriends(false).catch(() => {}); }
+    if (name === 'history') { logLimit = 20; renderPointsLog(); }
   }
   function openDrawer() {
     showPage('menu');
@@ -2771,14 +2858,15 @@
     drawer.classList.remove('open');
     $('app').inert = false; $('tabbar').inert = false;
     document.body.style.overflow = '';
-    $('openSettings').focus();
+    (drawerReturn && document.contains(drawerReturn) ? drawerReturn : $('openSettings')).focus();
+    drawerReturn = null; drawerEntry = 'menu';
     if (pendingHero) { pendingHero = false; renderHero(viewKey === todayKey()); }
   }
   function drawerBack() {
     if (drawerPage === 'edit') showPage('goals');
     else if (drawerPage === 'reward') showPage('rewards');
     else if (drawerPage === 'shared') showPage('inbox');
-    else if (['goals', 'units', 'rewards', 'share', 'cloud', 'inbox', 'backup', 'steps', 'friends'].includes(drawerPage)) showPage('menu');
+    else if (['goals', 'units', 'rewards', 'share', 'cloud', 'inbox', 'backup', 'steps', 'friends', 'history'].includes(drawerPage)) showPage('menu');
     $('drawerTitle').focus();
   }
   $('openSettings').addEventListener('click', openDrawer);
@@ -2806,10 +2894,10 @@
 
   // rewards settings
   $('openRewards').addEventListener('click', () => { showPage('rewards'); $('drawerTitle').focus(); });
-  let rw = { id: null, tier: 'star1', once: false };
+  let rw = { id: null, tier: 'star1', store: 'rp', once: false };
   let rwDelTimer = 0, rwDelArmed = false;
   function renderRewardList() {
-    const list = [...state.rewards].sort((a, b) => rTier(a.tier).cost - rTier(b.tier).cost || a.name.localeCompare(b.name));
+    const list = [...state.rewards].sort((a, b) => (storeOf(a) === storeOf(b) ? 0 : storeOf(a) === 'rp' ? -1 : 1) || rTier(a.tier).cost - rTier(b.tier).cost || a.name.localeCompare(b.name));
     $('rwEmpty').hidden = list.length > 0;
     $('rwList').replaceChildren(...list.map(r => {
       const t = rTier(r.tier);
@@ -2817,12 +2905,12 @@
       li.className = 'ovr-row';
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'ovr'; b.dataset.id = r.id;
-      b.setAttribute('aria-label', `${r.name}, ${starLabel(t.stars)}, ${nf.format(t.cost)} points. Edit`);
+      b.setAttribute('aria-label', `${r.name}, ${unit(t.store)} store, ${tierLabel(t)}, ${nf.format(t.cost)} ${unit(t.store)}. Edit`);
       const main = document.createElement('span'); main.className = 'o-main';
       const s1 = document.createElement('strong'); s1.textContent = r.name;
-      const s2 = document.createElement('small'); s2.append(starsEl(t.stars, true)); if (r.once) s2.append(document.createTextNode('One-time'));
+      const s2 = document.createElement('small'); s2.append(tierMark(t, true)); if (r.once) s2.append(document.createTextNode('One-time'));
       main.append(s1, s2);
-      const g = document.createElement('span'); g.className = 'o-goal'; g.textContent = nf.format(t.cost) + ' pts';
+      const g = document.createElement('span'); g.className = 'o-goal'; g.textContent = nf.format(t.cost) + ' ' + unit(t.store);
       b.append(main, g);
       const del = document.createElement('button');
       del.type = 'button'; del.className = 'trash'; del.dataset.id = r.id;
@@ -2833,6 +2921,7 @@
     }));
   }
   function syncRewardEditor() {
+    document.querySelectorAll('#rwStoreSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.store === rw.store)));
     document.querySelectorAll('#rwTiers button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tier === rw.tier)));
     document.querySelectorAll('#rwOnce button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.once === '1') === rw.once)));
     $('delReward').hidden = !rw.id;
@@ -2841,21 +2930,38 @@
   }
   function openRewardEditor(id, tier) {
     const r = id ? state.rewards.find(x => x.id === id) : null;
-    rw = { id: r ? r.id : null, tier: r ? rTier(r.tier).id : (tier || 'star1'), once: r ? r.once : false };
+    const first = r ? rTier(r.tier) : (tier ? rTier(tier) : tiersOf(rewardStore)[0]);
+    rw = { id: r ? r.id : null, tier: first.id, store: first.store, once: r ? r.once : false };
+    buildTierPicker();
     $('rwName').value = r ? r.name : '';
     showPage('reward', r ? 'Edit reward' : 'New reward');
     syncRewardEditor();
     $('drawerTitle').focus();
   }
   function openSettingsAt(tier) { openDrawer(); openRewardEditor(null, tier); }
-  $('rwTiers').replaceChildren(...R_TIERS.map(t => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = t.cls; b.dataset.tier = t.id; b.setAttribute('aria-pressed', 'false');
-    b.setAttribute('aria-label', `${starLabel(t.stars)}, ${nf.format(t.cost)} points`);
-    const c = document.createElement('span'); c.className = 't-cost'; c.textContent = `${nf.format(t.cost)} points`;
-    b.append(starsEl(t.stars), c);
-    return b;
-  }));
+  function buildTierPicker() {
+    $('rwTiers').replaceChildren(...tiersOf(rw.store).map(t => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = t.cls; b.dataset.tier = t.id; b.setAttribute('aria-pressed', String(t.id === rw.tier));
+      b.setAttribute('aria-label', `${tierLabel(t)}, ${nf.format(t.cost)} ${unit(t.store)}`);
+      if (t.store === 'fp') {
+        const l = document.createElement('span'); l.textContent = `${nf.format(t.cost)} points`;
+        b.append(l);
+      } else {
+        const c = document.createElement('span'); c.className = 't-cost'; c.textContent = `${nf.format(t.cost)} points`;
+        b.append(tierMark(t), c);
+      }
+      return b;
+    }));
+  }
+  $('rwStoreSeg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || !b.dataset.store || b.dataset.store === rw.store) return;
+    rw.store = b.dataset.store;
+    rw.tier = tiersOf(rw.store)[0].id;
+    buildTierPicker();
+    syncRewardEditor();
+  });
   $('addReward').addEventListener('click', () => openRewardEditor(null));
   $('rwList').addEventListener('click', e => {
     const d = e.target.closest('button.trash');

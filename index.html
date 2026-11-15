@@ -408,6 +408,7 @@
   .exrow .sx svg { width: 18px; height: 18px; }
   .addown { margin-top: 22px; }
   .fields2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .fields3.two { grid-template-columns: 1fr 1fr; }
   .fields3 { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 10px; margin-bottom: 14px; }
   .logged-h { margin: 26px 0 4px; }
   #sp-log .btn.wide + .btn.wide { margin-top: 10px; }
@@ -1243,10 +1244,14 @@
         <div><label class="lbl" for="inWeight" id="lblW">Weight (lb)</label><input type="text" id="inWeight" inputmode="decimal" autocomplete="off" placeholder="0"></div>
         <div><label class="lbl" for="inReps">Reps</label><input type="text" id="inReps" inputmode="numeric" autocomplete="off" placeholder="0"></div>
       </div>
+      <div id="fieldsLabel" hidden style="margin-bottom:14px">
+        <label class="lbl" for="inLabel">Class name</label>
+        <input type="text" id="inLabel" maxlength="40" autocomplete="off" placeholder="Zumba">
+      </div>
       <div class="fields3" id="fieldsCardio" hidden>
         <div><label class="lbl" for="inMin">Minutes</label><input type="text" id="inMin" inputmode="numeric" autocomplete="off" placeholder="0"></div>
         <div><label class="lbl" for="inSec">Seconds</label><input type="text" id="inSec" inputmode="numeric" autocomplete="off" placeholder="0"></div>
-        <div><label class="lbl" for="inDist" id="lblD">Distance (mi)</label><input type="text" id="inDist" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        <div id="wrapDist"><label class="lbl" for="inDist" id="lblD">Distance (mi)</label><input type="text" id="inDist" inputmode="decimal" autocomplete="off" placeholder="0"></div>
       </div>
       <button class="btn wide" id="addSet" type="button">Add set</button>
       <p class="err" id="setErr" role="alert" hidden></p>
@@ -1319,7 +1324,8 @@
             if (!isKey(day) || !Array.isArray(arr)) continue;
             const clean = arr.filter(e => e && typeof e.ex === 'string' && e.ex.indexOf('|') > 0).map(e => {
               const out = { id: String(e.id || Math.random().toString(36).slice(2)), ex: e.ex === 'chest|Shoulder Press' ? 'aux|Shoulder Press' : e.ex };
-              if (e.ex.startsWith('cardio|')) { out.sec = Math.max(0, +e.sec || 0); out.km = Math.max(0, +e.km || 0); }
+              if (e.ex.startsWith('cardio|')) { out.sec = Math.max(0, +e.sec || 0); out.km = Math.max(0, +e.km || 0); if (typeof e.label === 'string' && e.label.trim()) out.label = e.label.trim().slice(0, 40); }
+              else if (e.reps == null && +e.sec > 0) { out.sec = Math.max(0, Math.round(+e.sec)); }
               else { out.kg = Math.max(0, +e.kg || 0); out.reps = Math.max(1, Math.round(+e.reps || 1)); }
               return out;
             });
@@ -1937,12 +1943,12 @@
 
   /* ---------- workouts ---------- */
   const CATALOG = [
-    { id: 'cardio', name: 'Cardio', ex: ['Incline Treadmill', 'Treadmill', 'Run', 'Walk'] },
-    { id: 'legs', name: 'Legs', ex: ['Squat', 'Lunges', 'Leg Extension', 'Leg Curl', 'Leg Press', 'Hip Abduction', 'Hip Adduction', 'Calf Raises'] },
+    { id: 'cardio', name: 'Cardio', ex: ['Incline Treadmill', 'Treadmill', 'Run', 'Walk', 'Row Machine', 'Workout Class'] },
+    { id: 'legs', name: 'Legs', ex: ['Squat', 'Lunges', 'Leg Extension', 'Leg Curl', 'Leg Press', 'Hip Abduction', 'Hip Adduction', 'Calf Raises', 'Hip Thrust', 'RDL', 'Deadlift'] },
     { id: 'chest', name: 'Chest', ex: ['Flat Dumbbell Press', 'Incline Dumbbell Press', 'Flat Barbell Press', 'Incline Barbell Press', 'Dips', 'Pec Fly'] },
-    { id: 'back', name: 'Back', ex: ['Pull Ups', 'Lat Pulldown', 'T-Bar Rows', 'Cable Rows', 'Face Pulls'] },
-    { id: 'arms', name: 'Arms', ex: ['Bicep Curls', 'Tricep Pushdowns', 'Tricep Extensions'] },
-    { id: 'aux', name: 'Auxiliary', ex: ['Cable Crunches', 'Crunches', 'Shoulder Flies', 'Shoulder Press'] }
+    { id: 'back', name: 'Back', ex: ['Pull Ups', 'Assisted Pull Ups', 'Lat Pulldown', 'T-Bar Rows', 'Cable Rows', 'Face Pulls'] },
+    { id: 'arms', name: 'Arms', ex: ['Bicep Curls', 'Tricep Pushdowns', 'Tricep Extensions', 'Tricep Pullovers', 'Forearm Extensions'] },
+    { id: 'aux', name: 'Auxiliary', ex: ['Cable Crunches', 'Crunches', 'Shoulder Flies', 'Shoulder Press', 'Plank', 'Dead Bug', 'Russian Twists'] }
   ];
   const KG_PER_LB = 0.45359237, KM_PER_MI = 1.609344;
   const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -1951,7 +1957,17 @@
   const exCat = key => key.slice(0, key.indexOf('|'));
   const exName = key => key.slice(key.indexOf('|') + 1);
   const isCardioKey = key => key.startsWith('cardio|');
-  const exercisesOf = id => { const c = catById(id); return c ? [...c.ex, ...(state.customEx[id] || [])] : []; };
+  // Plank is timed (how long you held it) and Workout Class is a cardio entry with a typed class name
+  const TIMED_KEYS = new Set(['aux|Plank']);
+  const isTimedKey = key => TIMED_KEYS.has(key);
+  const isClassKey = key => key === 'cardio|Workout Class';
+  const setWord = key => (isCardioKey(key) ? 'Session' : isTimedKey(key) ? 'Hold' : 'Set');
+  const exercisesOf = id => {
+    const c = catById(id);
+    if (!c) return [];
+    const have = new Set(c.ex.map(n => n.toLowerCase()));
+    return [...c.ex, ...(state.customEx[id] || []).filter(n => !have.has(String(n).toLowerCase()))];
+  };
   const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const kgToDisp = kg => state.units.w === 'lb' ? kg / KG_PER_LB : kg;
   const dispToKg = v => state.units.w === 'lb' ? v * KG_PER_LB : v;
@@ -1972,8 +1988,10 @@
     return `${Math.floor(per / 60)}:${pad(per % 60)} /${state.units.d}`;
   }
   function describe(e) {
+    if (isTimedKey(e.ex)) return fmtDur(e.sec || 0);
     if (isCardioKey(e.ex)) {
       const parts = [];
+      if (e.label) parts.push(e.label);
       if (e.sec > 0) parts.push(fmtDur(e.sec));
       if (e.km > 0) parts.push(fmtDist(e.km));
       if (e.sec > 0 && e.km > 0) parts.push(fmtPace(e.sec, e.km));
@@ -2035,18 +2053,18 @@
       g.appendChild(head);
       entries.forEach((e, i) => {
         const row = document.createElement('div'); row.className = 'xset';
-        const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = (cardio ? 'Session ' : 'Set ') + (i + 1);
+        const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = setWord(key) + ' ' + (i + 1);
         const sv = document.createElement('span'); sv.className = 'sv'; sv.textContent = describe(e);
         const sx = document.createElement('button');
         sx.type = 'button'; sx.className = 'sx'; sx.dataset.id = e.id;
-        sx.setAttribute('aria-label', `Delete ${cardio ? 'session' : 'set'} ${i + 1} of ${exName(key)}`);
+        sx.setAttribute('aria-label', `Delete ${setWord(key).toLowerCase()} ${i + 1} of ${exName(key)}`);
         sx.innerHTML = ICON_X;
         row.append(sn, sv, sx);
         g.appendChild(row);
       });
       const add = document.createElement('button');
       add.type = 'button'; add.className = 'btn ghost xadd'; add.dataset.ex = key;
-      add.textContent = cardio ? 'Add session' : 'Add set';
+      add.textContent = 'Add ' + setWord(key).toLowerCase();
       add.disabled = k > todayKey();
       g.appendChild(add);
       nodes.push(g);
@@ -2075,6 +2093,10 @@
           cardio++;
           s.totKm += e.km || 0; s.totSec += e.sec || 0;
           if ((e.km || 0) > 0 && (!s.longKm || e.km > s.longKm.v + 1e-9)) s.longKm = { v: e.km, day };
+          if ((e.sec || 0) > 0 && (!s.longSec || e.sec > s.longSec.v)) s.longSec = { v: e.sec, day };
+        } else if (isTimedKey(e.ex)) {
+          sets++;
+          s.totSec += e.sec || 0;
           if ((e.sec || 0) > 0 && (!s.longSec || e.sec > s.longSec.v)) s.longSec = { v: e.sec, day };
         } else {
           sets++;
@@ -2111,7 +2133,7 @@
       h.textContent = (catById(cid) || { name: cid }).name;
       sec.appendChild(h);
       keys.forEach(key => {
-        const s = by.get(key), cardioRow = isCardioKey(key);
+        const s = by.get(key), cardioRow = isCardioKey(key), timedRow = isTimedKey(key);
         const row = document.createElement('div'); row.className = 'st-row';
         const left = document.createElement('div');
         const nm = document.createElement('div'); nm.className = 'st-name'; nm.textContent = exName(key);
@@ -2121,13 +2143,16 @@
           if (s.longKm) line(`Longest distance ${fmtDist(s.longKm.v)} on ${fmtFull(s.longKm.day)}`);
           if (s.longSec) line(`Longest time ${fmtDur(s.longSec.v)} on ${fmtFull(s.longSec.day)}`);
           if (s.totKm > 0) line(`Total distance ${fmtDist(s.totKm)}`);
+        } else if (timedRow) {
+          if (s.longSec) line(`Longest hold ${fmtDur(s.longSec.v)} on ${fmtFull(s.longSec.day)}`);
+          if (s.totSec > 0) line(`Total time ${fmtDur(s.totSec)}`);
         } else if (s.best) {
           line(`Best ${fmtWeight(s.best.kg)} × ${s.best.reps} on ${fmtFull(s.best.day)}`);
         }
         const right = document.createElement('div'); right.className = 'st-count';
         const num = document.createElement('strong'); num.textContent = nf.format(s.count);
         const lab = document.createElement('span');
-        lab.textContent = cardioRow ? (s.count === 1 ? 'session' : 'sessions') : (s.count === 1 ? 'set' : 'sets');
+        lab.textContent = cardioRow ? (s.count === 1 ? 'session' : 'sessions') : timedRow ? (s.count === 1 ? 'hold' : 'holds') : (s.count === 1 ? 'set' : 'sets');
         right.append(num, lab);
         row.append(left, right);
         sec.appendChild(row);
@@ -2220,20 +2245,27 @@
   }
   function openLog(key, opener) {
     sheetEx = key; sheetCat = exCat(key);
-    const cardio = isCardioKey(key);
-    ['inWeight', 'inReps', 'inMin', 'inSec', 'inDist'].forEach(id => { $(id).value = ''; });
-    if (!cardio) {
+    const cardio = isCardioKey(key), timed = isTimedKey(key), cls = isClassKey(key);
+    ['inWeight', 'inReps', 'inMin', 'inSec', 'inDist', 'inLabel'].forEach(id => { $(id).value = ''; });
+    if (cls) {
+      const lastClass = lastEntryFor(key);
+      if (lastClass && lastClass.label) $('inLabel').value = lastClass.label;
+    }
+    if (!cardio && !timed) {
       const last = lastEntryFor(key);
       if (last) {
         $('inWeight').value = last.kg > 0 ? plain(kgToDisp(last.kg)) : '';
         $('inReps').value = String(last.reps);
       }
     }
-    $('fieldsStrength').hidden = cardio;
-    $('fieldsCardio').hidden = !cardio;
+    $('fieldsStrength').hidden = cardio || timed;
+    $('fieldsCardio').hidden = !(cardio || timed);
+    $('wrapDist').hidden = cls || timed;
+    $('fieldsCardio').classList.toggle('two', cls || timed);
+    $('fieldsLabel').hidden = !cls;
     $('lblW').textContent = `Weight (${state.units.w})`;
     $('lblD').textContent = `Distance (${state.units.d})`;
-    $('addSet').textContent = cardio ? 'Add session' : 'Add set';
+    $('addSet').textContent = 'Add ' + setWord(key).toLowerCase();
     $('setErr').hidden = true;
     $('logFor').textContent = 'Logging for ' + fmtLong(viewKey) + (viewKey === todayKey() ? ' (today)' : '');
     renderLogged();
@@ -2242,16 +2274,16 @@
   }
   function renderLogged() {
     const list = (state.workouts[viewKey] || []).filter(e => e.ex === sheetEx);
-    const cardio = isCardioKey(sheetEx || '');
+    const wordKey = sheetEx || '';
     $('loggedH').hidden = list.length === 0;
     $('loggedH').textContent = viewKey === todayKey() ? 'Logged today' : 'Logged on ' + fmtShort(viewKey);
     $('loggedList').replaceChildren(...list.map((e, i) => {
       const row = document.createElement('div'); row.className = 'xset';
-      const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = (cardio ? 'Session ' : 'Set ') + (i + 1);
+      const sn = document.createElement('span'); sn.className = 'sn'; sn.textContent = setWord(wordKey) + ' ' + (i + 1);
       const sv = document.createElement('span'); sv.className = 'sv'; sv.textContent = describe(e);
       const sx = document.createElement('button');
       sx.type = 'button'; sx.className = 'sx'; sx.dataset.id = e.id;
-      sx.setAttribute('aria-label', `Delete ${cardio ? 'session' : 'set'} ${i + 1}`);
+      sx.setAttribute('aria-label', `Delete ${setWord(wordKey).toLowerCase()} ${i + 1}`);
       sx.innerHTML = ICON_X;
       row.append(sn, sv, sx);
       return row;
@@ -2263,13 +2295,22 @@
     const err = $('setErr'), key = sheetEx;
     const fail = msg => { err.textContent = msg; err.hidden = false; };
     let entry;
-    if (isCardioKey(key)) {
-      const m = num($('inMin').value), s = num($('inSec').value), d = num($('inDist').value);
+    if (isCardioKey(key) || isTimedKey(key)) {
+      const timed = isTimedKey(key), cls = isClassKey(key);
+      const m = num($('inMin').value), s = num($('inSec').value), d = (timed || cls) ? 0 : num($('inDist').value);
       if (![m, s, d].every(Number.isFinite) || m < 0 || s < 0 || d < 0) return fail('Use numbers only, like 30 minutes or 3.1 distance.');
       if (m > 999 || s > 59 || d > 9999) return fail('Seconds go up to 59 and minutes up to 999.');
       const sec = Math.round(m * 60 + s);
+      let label = '';
+      if (cls) {
+        label = $('inLabel').value.trim().replace(/\s+/g, ' ').slice(0, 40);
+        if (!label) return fail('Type the name of the class, like Zumba.');
+        if (sec <= 0) return fail('Enter how long the class was.');
+      }
+      if (timed && sec <= 0) return fail('Enter how long you held it.');
       if (sec <= 0 && d <= 0) return fail('Enter a time, a distance, or both.');
-      entry = { id: newId(), ex: key, sec: sec > 0 ? sec : 0, km: d > 0 ? dispToKm(d) : 0 };
+      entry = timed ? { id: newId(), ex: key, sec } : { id: newId(), ex: key, sec: sec > 0 ? sec : 0, km: d > 0 ? dispToKm(d) : 0 };
+      if (cls) entry.label = label;
     } else {
       const w = num($('inWeight').value), r = num($('inReps').value);
       if (!Number.isFinite(w) || w < 0 || w > 5000) return fail('Enter a weight from 0 to 5000, or leave it blank for bodyweight.');
@@ -2281,7 +2322,7 @@
     persist();
     renderAll();
     renderLogged();
-    toast(isCardioKey(key) ? 'Session added' : 'Set added');
+    toast(setWord(key) + ' added');
   }
 
   function addOwnExercise() {
@@ -2840,7 +2881,7 @@
     if (name === 'share') renderSharePage();
     if (name === 'cloud') renderCloudPage();
     if (name === 'inbox') { renderInbox(); if (signedIn()) pullShares(false).catch(() => {}); }
-    if (name === 'backup') $('bkErr').hidden = true;
+    if (name === 'backup') { $('bkErr').hidden = true; bkReady = null; $('bkExport').textContent = 'Save backup file'; }
     if (name === 'steps') renderManual();
     if (name === 'friends') { renderFriends(); if (signedIn()) pullFriends(false).catch(() => {}); }
     if (name === 'history') { logLimit = 20; renderPointsLog(); }
@@ -3008,6 +3049,9 @@
       const nm = exName(key);
       if (isCardioKey(key)) {
         out.push(`${nm}: ${entries.map(describe).join('; ')}`);
+      } else if (isTimedKey(key)) {
+        const longest = Math.max(...entries.map(e => e.sec || 0));
+        out.push(`${nm}: ${entries.length} ${entries.length === 1 ? 'hold' : 'holds'}, longest ${fmtDur(longest)}`);
       } else {
         let best = null;
         entries.forEach(e => {
@@ -3890,13 +3934,39 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     toast('Saved');
   }
+  // On an iPhone the share sheet ("Save to Files") is the reliable way to save a file from a Home Screen app.
+  // It has to be opened by a fresh tap, so the first tap builds the file and the second tap saves it.
+  const isIOSDevice = () => /iPad|iPhone|iPod/.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 1 && /Mac/.test(navigator.platform || ''));
+  let bkReady = null;
+  async function shareBackupFile(blob, name) {
+    const file = new File([blob], name, { type: 'application/json' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    await saveFile(blob, name);
+  }
   async function exportBackup() {
+    if (bkReady) {
+      const r = bkReady;
+      bkReady = null;
+      $('bkExport').textContent = 'Save backup file';
+      await shareBackupFile(r.blob, r.name);
+      return;
+    }
     $('bkExport').disabled = true;
     try {
       const out = {};
       for (const [k, ph] of photos) out[k] = await blobToDataURL(ph.full);
       const data = { app: 'brim', v: 1, exportedAt: new Date().toISOString(), state, photos: out };
-      await saveFile(new Blob([JSON.stringify(data)], { type: 'application/json' }), `brim-backup-${todayKey()}.json`);
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const name = `brim-backup-${todayKey()}.json`;
+      if (isIOSDevice() && navigator.canShare) {
+        bkReady = { blob, name };
+        $('bkExport').textContent = 'Tap again to save the file';
+        toast('Backup ready. Tap the button again.');
+      } else {
+        await saveFile(blob, name);
+      }
     } catch (e) { toast("Couldn't build the backup."); }
     finally { $('bkExport').disabled = false; }
   }
